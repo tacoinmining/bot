@@ -381,7 +381,7 @@ function initUserTelegram() {
 
 /* HỆ THỐNG XEM QUẢNG CÁO ADSGRAM */
 const adController = window.Adsgram
-  ? window.Adsgram.init({ blockId: "44419" })
+  ? window.Adsgram.init({ blockId: "44427" })
   : null;
 
 function initAdsSystem() {

@@ -388,7 +388,12 @@ body {
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 5px 15px rgba(255, 85, 0, 0.35);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+}
+
+/* Thêm hiệu ứng active scale cho nút bấm chính */
+.neon-btn:active {
+  transform: scale(0.96);
 }
 
 .neon-btn.mining {
@@ -1144,8 +1149,9 @@ body {
   box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
 }
 
+/* Hiệu ứng thu nhỏ khi bấm vào nút xem quảng cáo */
 .ads-box:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .ads-box.disabled {

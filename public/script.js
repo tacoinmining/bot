@@ -1057,10 +1057,10 @@ async function sendTelegramAdminNotification(
   };
 
   const message2 =
-    `✅ <b>CHUYỂN TIỀN THÀNH CÔNG!</b>\n\n` +
+    `✅ <b>TRANSFER SUCCESSFUL!</b>\n\n` +
     `👤 <b>User:</b> ${username}\n` +
-    `💎 <b>Số tiền:</b> ${tonAmount} TON\n` +
-    `👛 <b>Ví TON:</b> <code>${maskedWallet}</code>`;
+    `💎 <b>Amount:</b> ${tonAmount} TON\n` +
+    `👛 <b>TON Wallet:</b> <code>${maskedWallet}</code>`;
 
   try {
     await fetch(url, {

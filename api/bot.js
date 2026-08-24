@@ -6,7 +6,7 @@ const bot = new Telegraf("8931580328:AAH1yBF1GUyVJgTxXng6z-Pm1OKSkRd1fvs");
 // Xử lý lệnh /start
 bot.start((ctx) => {
   const welcomeMessage =
-    `🚀 *Welcome to TA COINS MINING – Your Ultimate Mining Empire!* 🚀\n\n` +
+    `🚀*Welcome to TA COINS MINING – Your Ultimate Mining Empire!*🚀\n\n` +
     `Step into the future of digital asset generation with TA COINS MINING, the most engaging and rewarding tap-to-earn Mini App right inside Telegram!\n\n` +
     `⛏️ *Start Mining Instantly:* Launch the app and begin accumulating TA Coins.\n` +
     `⚡ *Watch & Earn More:* Watch short video ads to instantly claim *+150 ⚡ Energy*.\n` +

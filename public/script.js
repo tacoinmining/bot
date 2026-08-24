@@ -393,26 +393,64 @@ function initAdsSystem() {
   adsTimerInterval = setInterval(updateAdsUI, 1000);
 }
 
-function watchAds() {
+// Biến lưu thời gian xem ads lần cuối để tính cooldown 15 phút
+let lastAdTime = 0;
+const AD_COOLDOWN = 15 * 60 * 1000; // 15 phút tính bằng mili-giây
+
+// Khởi tạo Adsgram Controller (Thay 'YOUR_ADSGRAM_BLOCK_ID' bằng Block ID thực tế của bạn)
+const adController = window.Adsgram
+  ? window.Adsgram.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" })
+  : null;
+
+async function watchAds() {
   const now = Date.now();
-  if (now < adsNextAvailableTime) return;
+  const elapsed = now - lastAdTime;
 
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
+  // Kiểm tra thời gian chờ (Cooldown 15 phút)
+  if (elapsed < AD_COOLDOWN) {
+    const remainingMinutes = Math.ceil((AD_COOLDOWN - elapsed) / 60000);
+    showModal(
+      "⏳ Chưa đến lúc!",
+      `Vui lòng chờ thêm khoảng **${remainingMinutes} phút** nữa trước khi xem quảng cáo tiếp theo nhé!`,
+    );
+    return;
+  }
 
-  balance += 150.0;
-  adsNextAvailableTime = Date.now() + ADS_COOLDOWN_TIME;
+  // Kiểm tra xem Adsgram SDK đã sẵn sàng chưa
+  if (!adController) {
+    showModal(
+      "⚠️ Lỗi kết nối",
+      "Không thể tải hệ thống quảng cáo Adsgram. Vui lòng thử lại sau!",
+    );
+    return;
+  }
 
-  saveState();
-  updateUI();
-  updateAdsUI();
+  try {
+    // Hiển thị quảng cáo Rewarded Video
+    const result = await adController.show();
 
-  showModal(
-    "🎁",
-    translations[currentLang].modal_task_title,
-    `${translations[currentLang].modal_task_desc} +150 ⚡ từ xem quảng cáo!`,
-  );
-  if (tg && tg.HapticFeedback)
-    tg.HapticFeedback.notificationOccurred("success");
+    // Nếu người dùng xem hết video thành công
+    if (result && result.done) {
+      lastAdTime = Date.now();
+
+      // Cộng 150 ⚡ vào số dư
+      userData.balance += 150;
+      updateUI();
+      await saveDataToSupabase();
+
+      showModal(
+        "🎉 Nhận Thưởng Thành Công!",
+        "Bạn đã xem hết quảng cáo và nhận được **+150 ⚡** vào tài khoản.",
+      );
+    }
+  } catch (err) {
+    // Trường hợp người dùng tắt giữa chừng hoặc lỗi hiển thị
+    console.error("Adsgram error:", err);
+    showModal(
+      "❌ Chưa hoàn thành",
+      "Bạn cần xem hết video quảng cáo để nhận phần thưởng năng lượng!",
+    );
+  }
 }
 
 function updateAdsUI() {

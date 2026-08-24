@@ -398,6 +398,16 @@ let lastAdTime = 0;
 const AD_COOLDOWN = 15 * 60 * 1000; // 15 phút tính bằng mili-giây
 
 /* HỆ THỐNG XEM QUẢNG CÁO ADSGRAM */
+const adController = window.Adsgram
+  ? window.Adsgram.init({ blockId: "44419" })
+  : null;
+
+function initAdsSystem() {
+  updateAdsUI();
+  if (adsTimerInterval) clearInterval(adsTimerInterval);
+  adsTimerInterval = setInterval(updateAdsUI, 1000);
+}
+
 async function watchAds() {
   const now = Date.now();
 
@@ -428,7 +438,10 @@ async function watchAds() {
 
     // Kiểm tra nếu người dùng đã xem hết quảng cáo thành công
     if (result && result.done) {
+      // Thiết lập thời gian chờ 15 phút tiếp theo
       adsNextAvailableTime = Date.now() + ADS_COOLDOWN_TIME;
+
+      // Cộng thưởng chính xác vào biến balance hiện tại của app
       balance += 150.0;
 
       await saveState();
@@ -447,26 +460,35 @@ async function watchAds() {
     }
   } catch (err) {
     console.error("Adsgram error:", err);
-
-    // Phân biệt lỗi: Nếu do hết quảng cáo/chưa có ad thì báo khác, nếu tắt giữa chừng báo khác
-    const errMessage = err.message || JSON.stringify(err);
-    if (errMessage.includes("No ads") || errMessage.includes("not available")) {
-      showModal(
-        "📭",
-        "Hết Quảng Cáo",
-        "Hiện tại chưa có quảng cáo khả dụng cho khu vực hoặc nền tảng của bạn. Vui lòng quay lại sau nhé!",
-      );
-    } else {
-      showModal(
-        "❌",
-        "Chưa hoàn thành",
-        "Bạn cần xem hết video quảng cáo để nhận phần thưởng năng lượng!",
-      );
-    }
-
+    showModal(
+      "❌",
+      "Chưa hoàn thành",
+      "Bạn cần xem hết video quảng cáo để nhận phần thưởng năng lượng!",
+    );
     if (tg && tg.HapticFeedback) {
       tg.HapticFeedback.notificationOccurred("error");
     }
+  }
+}
+
+function updateAdsUI() {
+  const now = Date.now();
+  const adsBtn = document.getElementById("ads-banner-btn");
+  const timerBadge = document.getElementById("ads-timer-badge");
+  if (!adsBtn || !timerBadge) return;
+
+  if (now < adsNextAvailableTime) {
+    adsBtn.classList.add("disabled");
+    timerBadge.style.display = "block";
+
+    const remaining = adsNextAvailableTime - now;
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+    timerBadge.innerText = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  } else {
+    adsBtn.classList.remove("disabled");
+    timerBadge.style.display = "none";
   }
 }
 /* LOGIC MỜI BẠN BÈ */

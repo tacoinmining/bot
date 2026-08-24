@@ -166,7 +166,7 @@ const BASE_HOURLY_RATE = 40.0;
 const RATE_INCREASE_PER_LEVEL = 1.0;
 const TON_RATE = 0.000001;
 const ADS_COOLDOWN_TIME = 15 * 60 * 1000;
-const DAILY_COOLDOWN = 24 * 60 * 60 * 1000; // Thời gian cooldown điểm danh 24h
+const DAILY_COOLDOWN = 24 * 60 * 60 * 1000;
 
 // BIẾN TRẠNG THÁI GAME
 let balance = 0.0;
@@ -195,7 +195,14 @@ let withdrawHistory = [];
 document.addEventListener("DOMContentLoaded", async () => {
   initUserTelegram();
   await fetchUserIP();
-  await loadStateFromSupabase();
+
+  // Tải dữ liệu và kiểm tra trạng thái khóa ngay từ đầu
+  const isBanned = await loadStateFromSupabase();
+  if (isBanned) {
+    showBannedScreen();
+    return; // Dừng, không chạy các hàm khởi tạo tiếp theo nếu đã bị khóa
+  }
+
   await loadWithdrawHistory();
   applyLanguage();
   updateUI();
@@ -205,6 +212,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   initAdsSystem();
   initSupabaseRealtime();
 });
+
+// --- HÀM HIỂN THỊ MÀN HÌNH KHÓA TÀI KHOẢN ---
+function showBannedScreen() {
+  const bodyEl = document.body;
+  if (bodyEl) {
+    bodyEl.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #0f172a; color: #fff; text-align: center; padding: 20px; font-family: sans-serif;">
+        <div style="font-size: 60px; margin-bottom: 20px;">🚫</div>
+        <h2 style="color: #ef4444; margin-bottom: 10px; font-size: 24px;">Tài khoản đã bị khóa</h2>
+        <p style="color: #94a3b8; font-size: 14px; max-width: 320px; line-height: 1.5;">Tài khoản Telegram của bạn đã bị vô hiệu hóa do phát hiện hành vi gian lận hoặc vi phạm quy tắc hệ thống.</p>
+      </div>
+    `;
+  }
+}
 
 // --- LẮNG NGHE THAY ĐỔI TRẠNG THÁI REALTIME TỪ SUPABASE ---
 function initSupabaseRealtime() {
@@ -270,7 +291,7 @@ async function loadWithdrawHistory() {
   }
 }
 
-// --- HÀM ĐỒNG BỘ DỮ LIỆU VỚI SUPABASE ---
+// --- HÀM ĐỒNG BỘ DỮ LIỆU VỚI SUPABASE (TRẢ VỀ TRẠNG THÁI BANNED) ---
 async function loadStateFromSupabase() {
   try {
     let { data, error } = await supabaseClient
@@ -291,6 +312,7 @@ async function loadStateFromSupabase() {
         task_group: "init",
         ads_next_time: 0,
         ip_address: userIpAddress,
+        is_banned: false,
       };
 
       let insertRes = await supabaseClient.from("users").insert([newUser]);
@@ -306,7 +328,13 @@ async function loadStateFromSupabase() {
       taskState.group = "init";
       adsNextAvailableTime = 0;
       savedTonAddress = "";
+      return false; // Chưa bị ban
     } else {
+      // KIỂM TRA TRẠNG THÁI BANNED Ở ĐÂY
+      if (data.is_banned === true) {
+        return true;
+      }
+
       balance = parseFloat(data.balance) || 0;
       minerLevel = parseInt(data.miner_level) || 1;
       endTime = data.end_time ? parseInt(data.end_time) : null;
@@ -325,9 +353,11 @@ async function loadStateFromSupabase() {
           .update({ ip_address: userIpAddress })
           .eq("telegram_id", userId);
       }
+      return false;
     }
   } catch (err) {
     console.error("Lỗi kết nối Supabase:", err);
+    return false;
   }
 }
 
@@ -386,11 +416,11 @@ const adController = window.Adsgram
 
 function initAdsSystem() {
   updateAdsUI();
-  updateDailyCheckInUI(); // Cập nhật giao diện điểm danh ngay khi khởi tạo
+  updateDailyCheckInUI();
   if (adsTimerInterval) clearInterval(adsTimerInterval);
   adsTimerInterval = setInterval(() => {
     updateAdsUI();
-    updateDailyCheckInUI(); // Chạy mỗi giây để đồng hồ đếm ngược điểm danh mượt mà
+    updateDailyCheckInUI();
   }, 1000);
 }
 
@@ -540,17 +570,16 @@ function closeModal() {
   if (modalEl) modalEl.classList.remove("active");
 }
 
-/* NHIỆM VỤ ĐIỂM DANH HẮNG NGÀY (CÓ ĐẾM NGƯỢC 24H) */
+/* NHIỆM VỤ ĐIỂM DANH HẮNG NGÀY */
 function claimDailyReward() {
   const now = Date.now();
 
-  // Kiểm tra nếu chưa qua 24h thì không cho bấm
   if (lastCheckinTime > 0 && now - lastCheckinTime < DAILY_COOLDOWN) {
     return;
   }
 
   lastCheckinTime = now;
-  balance += 100.0; // Phần thưởng điểm danh
+  balance += 100.0;
 
   saveState();
   updateUI();
@@ -573,7 +602,6 @@ function updateDailyCheckInUI() {
   const elapsed = now - lastCheckinTime;
 
   if (lastCheckinTime > 0 && elapsed < DAILY_COOLDOWN) {
-    // Vẫn trong thời gian chờ 24h -> Hiển thị đồng hồ đếm ngược trên nút
     const remaining = DAILY_COOLDOWN - elapsed;
     const hours = Math.floor(remaining / (1000 * 60 * 60));
     const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
@@ -583,7 +611,6 @@ function updateDailyCheckInUI() {
     dailyBtn.innerText = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
     dailyBtn.onclick = null;
   } else {
-    // Đã hết 24h -> Cho phép điểm danh lại
     dailyBtn.className = "task-btn claim-btn";
     dailyBtn.innerText = translations[currentLang].btn_checkin;
     dailyBtn.onclick = claimDailyReward;

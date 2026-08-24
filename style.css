@@ -1,0 +1,470 @@
+/* Reset CSS */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
+}
+
+body {
+  background: #030108;
+  color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* KHUNG MÀN HÌNH ĐIỆN THOẠI VỚI VIỀN ĐỎ ĐUỔI XANH */
+.phone-frame {
+  width: 100vw;
+  height: 100vh;
+  max-width: 420px;
+  max-height: 746px;
+  aspect-ratio: 9 / 16;
+  background: #080313;
+  border-radius: 28px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2px;
+}
+
+/* Dải màu Đỏ đuổi Xanh xoay tròn khung màn hình ngoài */
+.phone-frame::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    #ff0055 8%,
+    #00f2fe 20%,
+    transparent 25%,
+    transparent 100%
+  );
+  animation: chaseRotate 2s linear infinite;
+}
+
+.app-container {
+  width: 100%;
+  height: 100%;
+  padding: 14px 14px 65px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  z-index: 2;
+  background: #080313;
+  border-radius: 26px;
+}
+
+/* CONTAINER CHỨA NỘI DUNG CÁC TAB */
+.tab-content-wrapper {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-y: auto;
+}
+
+/* QUẢN LÝ ẨN/HIỆN CÁC TAB */
+.tab-view {
+  display: none;
+  width: 100%;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.tab-view.active {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Khoảng cách giữa Info và Card Đào */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================================= */
+/* 1. KHỐI THÔNG TIN NGƯỜI CHƠI (NẰM TRONG TAB MINING) */
+/* ========================================================= */
+.user-profile-card {
+  width: 100%;
+  position: relative;
+  border-radius: 18px;
+  background: rgba(18, 10, 36, 0.95);
+  padding: 2px;
+  overflow: hidden;
+}
+
+.user-profile-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    #ff0055 10%,
+    #00f2fe 25%,
+    transparent 30%,
+    transparent 100%
+  );
+  animation: chaseRotate 1.8s linear infinite;
+}
+
+.user-profile-card-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  background: #0e081e;
+  border-radius: 16px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 242, 254, 0.1);
+  border: 1px solid #00f2fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-fullname {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.user-username {
+  font-size: 11px;
+  font-weight: 500;
+  color: #00f2fe;
+  opacity: 0.85;
+}
+
+.user-rank {
+  font-size: 11px;
+  font-weight: 800;
+  color: #00f2fe;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 8px rgba(0, 242, 254, 0.6);
+}
+
+.user-balance {
+  text-align: right;
+}
+
+.balance-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #ff77e9;
+  letter-spacing: 1px;
+  display: block;
+}
+
+.balance-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 0 10px #00f2fe;
+}
+
+/* ========================================================= */
+/* 2. CARD MÁY ĐÀO CHÍNH */
+/* ========================================================= */
+.neon-card {
+  width: 100%;
+  position: relative;
+  border-radius: 20px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 242, 254, 0.6) 0%,
+    rgba(255, 0, 127, 0.4) 100%
+  );
+  padding: 1.5px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.neon-card-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  background: #0e081e;
+  border-radius: 18.5px;
+  padding: 18px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* VÒNG TRÒN TRUNG TÂM */
+.neon-ring-wrapper {
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.neon-ring {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 0, 127, 0.15) 0%,
+    rgba(9, 3, 20, 0.8) 100%
+  );
+  border: 2px solid rgba(255, 0, 85, 0.5);
+  box-shadow: 0 0 15px rgba(255, 0, 85, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* KHI ĐANG ĐÀO (ACTIVE) */
+.neon-ring.active {
+  border-color: transparent;
+  animation: neonPulse 1.8s infinite ease-in-out;
+}
+
+.neon-ring.active::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    #ff0055 15%,
+    #00f2fe 35%,
+    transparent 40%,
+    transparent 100%
+  );
+  animation: chaseRotate 0.8s linear infinite;
+}
+
+.neon-ring.active::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: #0e081e;
+  z-index: 1;
+}
+
+.neon-ring.active .crystal-icon {
+  position: relative;
+  z-index: 2;
+  animation: crystalFlash 0.6s infinite alternate;
+}
+
+/* KEYFRAMES */
+@keyframes chaseRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes neonPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 22px rgba(255, 0, 85, 0.6);
+  }
+}
+
+@keyframes crystalFlash {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px #00f2fe);
+  }
+  100% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 18px #ff0055);
+  }
+}
+
+.crystal-icon {
+  font-size: 46px;
+  filter: drop-shadow(0 0 10px #ff0055);
+  transition: all 0.3s ease;
+}
+
+.rate-neon {
+  font-size: 20px;
+  font-weight: 800;
+  color: #00f2fe;
+  text-shadow: 0 0 10px rgba(0, 242, 254, 0.7);
+  margin-bottom: 10px;
+}
+
+.timer-display {
+  font-size: 18px;
+  font-weight: 800;
+  color: #00f2fe;
+  text-shadow: 0 0 8px #00f2fe;
+  background: rgba(0, 242, 254, 0.08);
+  border: 1px solid rgba(0, 242, 254, 0.4);
+  padding: 6px 18px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+}
+
+/* NÚT ĐÀO */
+.neon-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #ff8c00 0%, #ff3300 100%);
+  border: none;
+  border-radius: 14px;
+  padding: 13px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(255, 85, 0, 0.35);
+  transition: all 0.3s ease;
+}
+
+.neon-btn.mining {
+  background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+  box-shadow: 0 5px 15px rgba(0, 198, 255, 0.3);
+  cursor: not-allowed;
+}
+
+.neon-btn.claim {
+  background: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
+  color: #05020a;
+  box-shadow: 0 5px 15px rgba(0, 255, 135, 0.35);
+}
+
+/* CARD PHỤ CHO CÁC TAB KHÁC */
+.simple-card {
+  width: 100%;
+  background: #0e081e;
+  border: 1.5px solid rgba(0, 242, 254, 0.4);
+  border-radius: 20px;
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.tab-title {
+  color: #00f2fe;
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  text-shadow: 0 0 8px rgba(0, 242, 254, 0.5);
+}
+
+.tab-desc {
+  color: #a093c4;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.placeholder-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 0, 127, 0.4);
+  border-radius: 12px;
+  padding: 30px 15px;
+  color: #ff77e9;
+  font-size: 13px;
+}
+
+/* NAVIGATION BAR */
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(8, 3, 19, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 242, 254, 0.2);
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  z-index: 10;
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  color: #6b5a8e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  gap: 4px;
+  cursor: pointer;
+  width: 25%;
+}
+
+.nav-item.active {
+  color: #ff007f;
+  text-shadow: 0 0 8px rgba(255, 0, 127, 0.6);
+}
+
+.nav-icon {
+  font-size: 18px;
+}
+
+@media (max-width: 480px) {
+  .phone-frame {
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}

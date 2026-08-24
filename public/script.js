@@ -41,7 +41,7 @@ const translations = {
     social_tasks_title: "Nhiệm Vụ Telegram",
     task_channel_name: "Kênh Telegram chính thức",
     task_group_name: "Nhóm Chat Telegram",
-    btn_checkin: "Nhận",
+    btn_checkin: "Điểm danh ngay",
     btn_do_task: "Thực hiện",
     btn_claim_task: "Nhận Coin",
     btn_done: "Đã hoàn thành",
@@ -112,7 +112,7 @@ const translations = {
     social_tasks_title: "Telegram Tasks",
     task_channel_name: "Official Telegram Channel",
     task_group_name: "Telegram Chat Group",
-    btn_checkin: "Claim",
+    btn_checkin: "Check-in",
     btn_do_task: "Start",
     btn_claim_task: "Claim",
     btn_done: "Completed",
@@ -166,6 +166,7 @@ const BASE_HOURLY_RATE = 40.0;
 const RATE_INCREASE_PER_LEVEL = 1.0;
 const TON_RATE = 0.000001;
 const ADS_COOLDOWN_TIME = 15 * 60 * 1000;
+const DAILY_COOLDOWN = 24 * 60 * 60 * 1000; // Thời gian cooldown điểm danh 24h
 
 // BIẾN TRẠNG THÁI GAME
 let balance = 0.0;
@@ -324,14 +325,6 @@ async function loadStateFromSupabase() {
           .update({ ip_address: userIpAddress })
           .eq("telegram_id", userId);
       }
-
-      const now = Date.now();
-      const cooldown24h = 24 * 60 * 60 * 1000;
-      if (lastCheckinTime > 0 && now - lastCheckinTime < cooldown24h) {
-        taskState.daily = true;
-      } else {
-        taskState.daily = false;
-      }
     }
   } catch (err) {
     console.error("Lỗi kết nối Supabase:", err);
@@ -386,17 +379,6 @@ function initUserTelegram() {
   }
 }
 
-/* HỆ THỐNG XEM QUẢNG CÁO */
-function initAdsSystem() {
-  updateAdsUI();
-  if (adsTimerInterval) clearInterval(adsTimerInterval);
-  adsTimerInterval = setInterval(updateAdsUI, 1000);
-}
-
-// Biến lưu thời gian xem ads lần cuối để tính cooldown 15 phút
-let lastAdTime = 0;
-const AD_COOLDOWN = 15 * 60 * 1000; // 15 phút tính bằng mili-giây
-
 /* HỆ THỐNG XEM QUẢNG CÁO ADSGRAM */
 const adController = window.Adsgram
   ? window.Adsgram.init({ blockId: "44419" })
@@ -404,14 +386,17 @@ const adController = window.Adsgram
 
 function initAdsSystem() {
   updateAdsUI();
+  updateDailyCheckInUI(); // Cập nhật giao diện điểm danh ngay khi khởi tạo
   if (adsTimerInterval) clearInterval(adsTimerInterval);
-  adsTimerInterval = setInterval(updateAdsUI, 1000);
+  adsTimerInterval = setInterval(() => {
+    updateAdsUI();
+    updateDailyCheckInUI(); // Chạy mỗi giây để đồng hồ đếm ngược điểm danh mượt mà
+  }, 1000);
 }
 
 async function watchAds() {
   const now = Date.now();
 
-  // Kiểm tra thời gian cooldown (15 phút)
   if (now < adsNextAvailableTime) {
     const remaining = adsNextAvailableTime - now;
     const remainingMinutes = Math.ceil(remaining / 60000);
@@ -433,15 +418,10 @@ async function watchAds() {
   }
 
   try {
-    // Hiển thị quảng cáo Rewarded Video từ Adsgram
     const result = await adController.show();
 
-    // Kiểm tra nếu người dùng đã xem hết quảng cáo thành công
     if (result && result.done) {
-      // Thiết lập thời gian chờ 15 phút tiếp theo
       adsNextAvailableTime = Date.now() + ADS_COOLDOWN_TIME;
-
-      // Cộng thưởng chính xác vào biến balance hiện tại của app
       balance += 150.0;
 
       await saveState();
@@ -491,6 +471,7 @@ function updateAdsUI() {
     timerBadge.style.display = "none";
   }
 }
+
 /* LOGIC MỜI BẠN BÈ */
 function setupRefLink() {
   const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
@@ -559,18 +540,17 @@ function closeModal() {
   if (modalEl) modalEl.classList.remove("active");
 }
 
-/* NHIỆM VỤ ĐIỂM DANH & TELEGRAM (ĐÃ CẬP NHẬT MỨC THƯỞNG MỚI) */
+/* NHIỆM VỤ ĐIỂM DANH HẮNG NGÀY (CÓ ĐẾM NGƯỢC 24H) */
 function claimDailyReward() {
   const now = Date.now();
-  const cooldown24h = 24 * 60 * 60 * 1000;
 
-  if (lastCheckinTime > 0 && now - lastCheckinTime < cooldown24h) {
+  // Kiểm tra nếu chưa qua 24h thì không cho bấm
+  if (lastCheckinTime > 0 && now - lastCheckinTime < DAILY_COOLDOWN) {
     return;
   }
 
-  taskState.daily = true;
   lastCheckinTime = now;
-  balance += 100.0; // Đã đổi từ 50 hoặc 10 lên 100 ⚡
+  balance += 100.0; // Phần thưởng điểm danh
 
   saveState();
   updateUI();
@@ -583,6 +563,31 @@ function claimDailyReward() {
   );
   if (tg && tg.HapticFeedback)
     tg.HapticFeedback.notificationOccurred("success");
+}
+
+function updateDailyCheckInUI() {
+  const dailyBtn = document.getElementById("daily-btn");
+  if (!dailyBtn) return;
+
+  const now = Date.now();
+  const elapsed = now - lastCheckinTime;
+
+  if (lastCheckinTime > 0 && elapsed < DAILY_COOLDOWN) {
+    // Vẫn trong thời gian chờ 24h -> Hiển thị đồng hồ đếm ngược trên nút
+    const remaining = DAILY_COOLDOWN - elapsed;
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+    dailyBtn.className = "task-btn done-btn disabled";
+    dailyBtn.innerText = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    dailyBtn.onclick = null;
+  } else {
+    // Đã hết 24h -> Cho phép điểm danh lại
+    dailyBtn.className = "task-btn claim-btn";
+    dailyBtn.innerText = translations[currentLang].btn_checkin;
+    dailyBtn.onclick = claimDailyReward;
+  }
 }
 
 function processTask(taskId, url) {
@@ -603,7 +608,7 @@ function processTask(taskId, url) {
       btn.style.opacity = "1";
     }, 3000);
   } else if (taskState[taskId] === "waiting") {
-    const reward = 500.0; // Đã đổi thành 500 ⚡ cho mỗi nhiệm vụ join nhóm
+    const reward = 500.0;
     balance += reward;
     taskState[taskId] = "claimed";
 
@@ -622,18 +627,7 @@ function processTask(taskId, url) {
 }
 
 function updateTaskUI() {
-  const dailyBtn = document.getElementById("daily-btn");
-  if (dailyBtn) {
-    if (taskState.daily) {
-      dailyBtn.className = "task-btn done-btn";
-      dailyBtn.innerText = translations[currentLang].btn_done;
-      dailyBtn.onclick = null;
-    } else {
-      dailyBtn.className = "task-btn claim-btn";
-      dailyBtn.innerText = translations[currentLang].btn_checkin;
-      dailyBtn.onclick = claimDailyReward;
-    }
-  }
+  updateDailyCheckInUI();
 
   ["channel", "group"].forEach((taskId) => {
     const btn = document.getElementById(`btn-task-${taskId}`);

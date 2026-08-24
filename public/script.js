@@ -179,6 +179,7 @@ let taskState = {
   channel: "init",
   group: "init",
 };
+let lastCheckinTime = 0;
 
 let withdrawHistory = [];
 
@@ -204,22 +205,49 @@ async function loadStateFromSupabase() {
       .single();
 
     if (error || !data) {
-      // Nếu chưa có user trong Database, tạo mới mặc định
+      console.log(
+        "Không tìm thấy user trên Supabase, đang tiến hành tạo mới cho ID:",
+        userId,
+      );
       const newUser = {
         telegram_id: userId,
         username: currentUsername,
         balance: 1000.0,
         miner_level: 1,
         end_time: 0,
+        last_checkin: 0,
+        task_channel: "init",
+        task_group: "init",
       };
-      await supabaseClient.from("users").insert([newUser]);
+
+      let insertRes = await supabaseClient.from("users").insert([newUser]);
+      if (insertRes.error) {
+        console.error("LỖI INSERT SUPABASE:", insertRes.error);
+      }
+
       balance = 1000.0;
       minerLevel = 1;
       endTime = null;
+      lastCheckinTime = 0;
+      taskState.channel = "init";
+      taskState.group = "init";
     } else {
       balance = parseFloat(data.balance) || 0;
       minerLevel = parseInt(data.miner_level) || 1;
       endTime = data.end_time ? parseInt(data.end_time) : null;
+
+      lastCheckinTime = data.last_checkin ? parseInt(data.last_checkin) : 0;
+      taskState.channel = data.task_channel || "init";
+      taskState.group = data.task_group || "init";
+
+      // Kiểm tra khóa 24h điểm danh
+      const now = Date.now();
+      const cooldown24h = 24 * 60 * 60 * 1000;
+      if (lastCheckinTime > 0 && now - lastCheckinTime < cooldown24h) {
+        taskState.daily = true;
+      } else {
+        taskState.daily = false;
+      }
     }
   } catch (err) {
     console.error("Lỗi kết nối Supabase:", err);
@@ -235,6 +263,9 @@ async function saveState() {
         miner_level: minerLevel,
         end_time: endTime ? endTime : 0,
         username: currentUsername,
+        last_checkin: lastCheckinTime,
+        task_channel: taskState.channel,
+        task_group: taskState.group,
       })
       .eq("telegram_id", userId);
   } catch (err) {
@@ -253,17 +284,26 @@ function initUserTelegram() {
     const fullName = [user.first_name, user.last_name]
       .filter(Boolean)
       .join(" ");
-    document.getElementById("user-fullname").innerText =
-      fullName || "Telegram User";
+
+    const userFullnameEl = document.getElementById("user-fullname");
+    if (userFullnameEl) userFullnameEl.innerText = fullName || "Telegram User";
 
     const usernameElem = document.getElementById("username");
-    usernameElem.innerText = user.username
-      ? `@${user.username}`
-      : "#no_username";
+    if (usernameElem) {
+      usernameElem.innerText = user.username
+        ? `@${user.username}`
+        : "#no_username";
+    }
+  } else {
+    userId = "12345678";
+    console.warn(
+      "Không tìm thấy môi trường Telegram, đang dùng userId giả lập:",
+      userId,
+    );
   }
 }
 
-/* HỆ THỐNG XEM QUẢNG CÁO (150 COINS - 15 PHÚT CHỜ) */
+/* HỆ THỐNG XEM QUẢNG CÁO */
 function initAdsSystem() {
   updateAdsUI();
   if (adsTimerInterval) clearInterval(adsTimerInterval);
@@ -322,11 +362,12 @@ function setupRefLink() {
 
 function copyRefLink() {
   const input = document.getElementById("ref-link-input");
+  if (!input) return;
   input.select();
   document.execCommand("copy");
 
   const copyBtnText = document.getElementById("copy-btn-text");
-  copyBtnText.innerText = translations[currentLang].btn_copied;
+  if (copyBtnText) copyBtnText.innerText = translations[currentLang].btn_copied;
 
   showModal(
     "📋",
@@ -338,7 +379,7 @@ function copyRefLink() {
     tg.HapticFeedback.notificationOccurred("success");
 
   setTimeout(() => {
-    copyBtnText.innerText = translations[currentLang].btn_copy;
+    if (copyBtnText) copyBtnText.innerText = translations[currentLang].btn_copy;
   }, 2000);
 }
 
@@ -364,37 +405,51 @@ function getCycleReward() {
 }
 
 function showModal(icon, title, desc) {
-  document.getElementById("modal-icon").innerText = icon;
-  document.getElementById("modal-title").innerText = title;
-  document.getElementById("modal-desc").innerText = desc;
-  document.getElementById("custom-modal").classList.add("active");
+  const iconEl = document.getElementById("modal-icon");
+  const titleEl = document.getElementById("modal-title");
+  const descEl = document.getElementById("modal-desc");
+  const modalEl = document.getElementById("custom-modal");
+
+  if (iconEl) iconEl.innerText = icon;
+  if (titleEl) titleEl.innerText = title;
+  if (descEl) descEl.innerText = desc;
+  if (modalEl) modalEl.classList.add("active");
 }
 
 function closeModal() {
-  document.getElementById("custom-modal").classList.remove("active");
+  const modalEl = document.getElementById("custom-modal");
+  if (modalEl) modalEl.classList.remove("active");
 }
 
-/* NHIỆM VỤ THƯỜNG & TELEGRAM */
+/* NHIỆM VỤ ĐIỂM DANH & TELEGRAM */
 function claimDailyReward() {
-  if (!taskState.daily) {
-    taskState.daily = true;
-    balance += 10.0;
-    saveState();
-    updateUI();
-    updateTaskUI();
+  const now = Date.now();
+  const cooldown24h = 24 * 60 * 60 * 1000;
 
-    showModal(
-      "📅",
-      translations[currentLang].modal_task_title,
-      `${translations[currentLang].modal_task_desc} +10 ⚡!`,
-    );
-    if (tg && tg.HapticFeedback)
-      tg.HapticFeedback.notificationOccurred("success");
+  if (lastCheckinTime > 0 && now - lastCheckinTime < cooldown24h) {
+    return;
   }
+
+  taskState.daily = true;
+  lastCheckinTime = now; // Gán thời gian hiện tại
+  balance += 10.0;
+
+  saveState(); // Lưu ngay lập tức lên Supabase
+  updateUI();
+  updateTaskUI();
+
+  showModal(
+    "📅",
+    translations[currentLang].modal_task_title,
+    `${translations[currentLang].modal_task_desc} +10 ⚡!`,
+  );
+  if (tg && tg.HapticFeedback)
+    tg.HapticFeedback.notificationOccurred("success");
 }
 
 function processTask(taskId, url) {
   const btn = document.getElementById(`btn-task-${taskId}`);
+  if (!btn) return;
 
   if (taskState[taskId] === "init") {
     if (tg && tg.openTelegramLink) tg.openTelegramLink(url);
@@ -430,19 +485,25 @@ function processTask(taskId, url) {
 
 function updateTaskUI() {
   const dailyBtn = document.getElementById("daily-btn");
-  if (taskState.daily) {
-    dailyBtn.className = "task-btn done-btn";
-    dailyBtn.innerText = translations[currentLang].btn_done;
-    dailyBtn.onclick = null;
+  if (dailyBtn) {
+    if (taskState.daily) {
+      dailyBtn.className = "task-btn done-btn";
+      dailyBtn.innerText = translations[currentLang].btn_done;
+      dailyBtn.onclick = null;
+    } else {
+      dailyBtn.className = "task-btn claim-btn";
+      dailyBtn.innerText = translations[currentLang].btn_checkin;
+      dailyBtn.onclick = claimDailyReward;
+    }
   }
 
   ["channel", "group"].forEach((taskId) => {
     const btn = document.getElementById(`btn-task-${taskId}`);
     if (!btn) return;
+    const taskItemElement = btn.closest(".task-item");
+
     if (taskState[taskId] === "claimed") {
-      btn.className = "task-btn done-btn";
-      btn.innerText = translations[currentLang].btn_done;
-      btn.onclick = null;
+      if (taskItemElement) taskItemElement.style.display = "none";
     } else if (taskState[taskId] === "waiting") {
       btn.className = "task-btn claim-btn";
       btn.innerText = translations[currentLang].btn_claim_task;
@@ -514,34 +575,42 @@ function updateUI() {
 
   if (!startBtn) return;
 
-  document.getElementById("balance").innerText = balance.toFixed(2);
-  document.getElementById("miner-level").innerText = `LV ${minerLevel}`;
-  document.getElementById("hourly-rate").innerText =
-    `${getHourlyRate().toFixed(1)} ⚡/h`;
-  document.getElementById("rate-display").innerText =
-    `+${getCycleReward().toFixed(0)} ⚡ / 6h`;
+  const balanceEl = document.getElementById("balance");
+  const minerLevelEl = document.getElementById("miner-level");
+  const hourlyRateEl = document.getElementById("hourly-rate");
+  const rateDisplayEl = document.getElementById("rate-display");
 
-  if (balance < UPGRADE_COST) upgradeBtn.classList.add("disabled");
-  else upgradeBtn.classList.remove("disabled");
+  if (balanceEl) balanceEl.innerText = balance.toFixed(2);
+  if (minerLevelEl) minerLevelEl.innerText = `LV ${minerLevel}`;
+  if (hourlyRateEl)
+    hourlyRateEl.innerText = `${getHourlyRate().toFixed(1)} ⚡/h`;
+  if (rateDisplayEl)
+    rateDisplayEl.innerText = `+${getCycleReward().toFixed(0)} ⚡ / 6h`;
+
+  if (upgradeBtn) {
+    if (balance < UPGRADE_COST) upgradeBtn.classList.add("disabled");
+    else upgradeBtn.classList.remove("disabled");
+  }
 
   if (timerInterval) clearInterval(timerInterval);
 
   if (!endTime) {
     startBtn.className = "neon-btn";
-    btnText.innerText = translations[currentLang].btn_start;
-    timerDisplay.style.display = "none";
+    if (btnText) btnText.innerText = translations[currentLang].btn_start;
+    if (timerDisplay) timerDisplay.style.display = "none";
     if (neonRing) neonRing.classList.remove("active");
   } else if (now < endTime) {
     startBtn.className = "neon-btn mining";
-    btnText.innerText = translations[currentLang].btn_mining;
-    timerDisplay.style.display = "block";
+    if (btnText) btnText.innerText = translations[currentLang].btn_mining;
+    if (timerDisplay) timerDisplay.style.display = "block";
     if (neonRing) neonRing.classList.add("active");
     renderTimer();
     timerInterval = setInterval(renderTimer, 1000);
   } else {
     startBtn.className = "neon-btn claim";
-    btnText.innerText = `${translations[currentLang].btn_claim} +${getCycleReward().toFixed(0)} ⚡`;
-    timerDisplay.style.display = "none";
+    if (btnText)
+      btnText.innerText = `${translations[currentLang].btn_claim} +${getCycleReward().toFixed(0)} ⚡`;
+    if (timerDisplay) timerDisplay.style.display = "none";
     if (neonRing) neonRing.classList.remove("active");
   }
 }
@@ -608,7 +677,7 @@ function switchTab(tabName, clickedBtn) {
   const targetView = document.getElementById(`tab-${tabName}`);
   if (targetView) {
     targetView.classList.add("active");
-    clickedBtn.classList.add("active");
+    if (clickedBtn) clickedBtn.classList.add("active");
   }
 
   if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
@@ -716,7 +785,7 @@ function renderWithdrawHistory() {
         statusClass = "success";
       } else if (tx.status === "rejected") {
         statusText = translations[currentLang].status_rejected;
-        (statusClass, (statusClass = "rejected"));
+        statusClass = "rejected";
       }
 
       return `

@@ -378,7 +378,7 @@ async function loadStateFromSupabase() {
 
 async function saveState() {
   try {
-    await supabaseClient
+    const { data, error } = await supabaseClient
       .from("users")
       .update({
         balance: balance,
@@ -390,12 +390,18 @@ async function saveState() {
         task_group: taskState.group,
         ads_next_time: adsNextAvailableTime,
         ip_address: userIpAddress,
-        ton_address: savedTonAddress, // Cực kỳ quan trọng
+        ton_address: savedTonAddress ? String(savedTonAddress) : "", // Ép kiểu string an toàn
         used_promo_codes: usedPromoCodes,
       })
       .eq("telegram_id", userId);
+
+    if (error) {
+      console.error("LỖI SUPABASE KHI LƯU:", error.message, error.details);
+    } else {
+      console.log("Lưu dữ liệu thành công lên Supabase!");
+    }
   } catch (err) {
-    console.error("Lỗi lưu dữ liệu lên Supabase:", err);
+    console.error("Lỗi ngoại lệ khi gọi hàm saveState:", err);
   }
 }
 

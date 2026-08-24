@@ -100,22 +100,52 @@
 
           <!-- TAB 2: TASKS -->
           <section class="tab-view" id="tab-tasks">
-            <div class="simple-card">
-              <h3 class="tab-title" data-i18n="tasks_title">Nhiệm Vụ Nhận Coin</h3>
-              <p class="tab-desc" data-i18n="tasks_desc">Hoàn thành nhiệm vụ để kiếm thêm $TA</p>
-              <div class="placeholder-box" data-i18n="tasks_box">
-                📋 Danh sách nhiệm vụ sẽ cập nhật ở đây
+            <div class="tasks-container">
+              <!-- Card Điểm danh hằng ngày -->
+              <div class="daily-card">
+                <div class="daily-info">
+                  <div class="daily-icon">📅</div>
+                  <div>
+                    <div class="task-name" data-i18n="daily_title">Điểm Danh Hằng Ngày</div>
+                    <div class="task-reward">+10 ⚡</div>
+                  </div>
+                </div>
+                <button class="task-btn claim-btn" id="daily-btn" onclick="claimDailyReward()">
+                  <span data-i18n="btn_checkin">Nhận</span>
+                </button>
               </div>
-            </div>
-          </section>
 
-          <!-- TAB 3: INVITE -->
-          <section class="tab-view" id="tab-invite">
-            <div class="simple-card">
-              <h3 class="tab-title" data-i18n="invite_title">Mời Bạn Bè</h3>
-              <p class="tab-desc" data-i18n="invite_desc">Nhận 10% hoa hồng từ người bạn giới thiệu</p>
-              <div class="placeholder-box" data-i18n="invite_box">
-                👥 Link giới thiệu sẽ cập nhật ở đây
+              <!-- Danh sách Nhiệm vụ Telegram -->
+              <div class="tasks-header" data-i18n="social_tasks_title">Nhiệm Vụ Telegram</div>
+
+              <div class="task-list">
+                <!-- Task 1: Telegram Channel -->
+                <div class="task-item" id="task-channel">
+                  <div class="task-info">
+                    <div class="task-icon">📢</div>
+                    <div>
+                      <div class="task-name" data-i18n="task_channel_name">Kênh Telegram chính thức</div>
+                      <div class="task-reward">+50 ⚡</div>
+                    </div>
+                  </div>
+                  <button class="task-btn" id="btn-task-channel" onclick="processTask('channel', 'https://t.me/tamining_bot')">
+                    <span data-i18n="btn_do_task">Thực hiện</span>
+                  </button>
+                </div>
+
+                <!-- Task 2: Telegram Group -->
+                <div class="task-item" id="task-group">
+                  <div class="task-info">
+                    <div class="task-icon">💬</div>
+                    <div>
+                      <div class="task-name" data-i18n="task_group_name">Nhóm Chat Telegram</div>
+                      <div class="task-reward">+50 ⚡</div>
+                    </div>
+                  </div>
+                  <button class="task-btn" id="btn-task-group" onclick="processTask('group', 'https://t.me/taminingchat')">
+                    <span data-i18n="btn_do_task">Thực hiện</span>
+                  </button>
+                </div>
               </div>
             </div>
           </section>

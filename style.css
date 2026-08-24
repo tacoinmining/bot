@@ -673,3 +673,132 @@ body {
 .modal-btn:active {
   transform: scale(0.95);
 }
+
+/* ========================================================= */
+/* TAB TASKS CSS */
+/* ========================================================= */
+.tasks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+/* Card Điểm Danh Hằng Ngày */
+.daily-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 127, 0.2) 0%,
+    rgba(0, 242, 254, 0.1) 100%
+  );
+  border: 1.5px solid #ff007f;
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 15px rgba(255, 0, 127, 0.2);
+}
+
+.daily-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.daily-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 0 5px #ff007f);
+}
+
+/* Tiêu đề nhóm nhiệm vụ */
+.tasks-header {
+  font-size: 13px;
+  font-weight: 800;
+  color: #00f2fe;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  text-transform: uppercase;
+  text-shadow: 0 0 5px rgba(0, 242, 254, 0.4);
+}
+
+/* Danh sách Nhiệm vụ */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-item {
+  background: #0e081e;
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+}
+
+.task-item.completed {
+  opacity: 0.45;
+  border-color: rgba(255, 255, 255, 0.1);
+  filter: grayscale(0.6);
+}
+
+.task-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-icon {
+  font-size: 24px;
+}
+
+.task-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.task-reward {
+  font-size: 12px;
+  font-weight: 800;
+  color: #00f2fe;
+}
+
+/* Nút bấm làm nhiệm vụ (Cơ bản) */
+.task-btn {
+  background: rgba(0, 242, 254, 0.15);
+  border: 1px solid #00f2fe;
+  color: #00f2fe;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.task-btn:active {
+  transform: scale(0.92);
+}
+
+/* Nút Claim Nhận Coin (Xanh Neon) */
+.task-btn.claim-btn {
+  background: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
+  border: none;
+  color: #05020a;
+  box-shadow: 0 0 10px rgba(0, 255, 135, 0.4);
+}
+
+/* Nút Đã Hoàn Thành (Mờ đi) */
+.task-btn.done-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #6b5a8e;
+  cursor: not-allowed;
+  box-shadow: none;
+}

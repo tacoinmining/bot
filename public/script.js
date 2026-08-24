@@ -169,6 +169,7 @@ let endTime = null;
 let currentLang = "vi";
 let userId = "12345678";
 let currentUsername = "TestUser";
+let userIpAddress = ""; // Biến lưu địa chỉ IP của người dùng
 
 let timerInterval = null;
 let adsTimerInterval = null;
@@ -186,6 +187,7 @@ let withdrawHistory = [];
 // KHỞI CHẠY ỨNG DỤNG VÀ TẢI TỪ SUPABASE
 document.addEventListener("DOMContentLoaded", async () => {
   initUserTelegram();
+  await fetchUserIP(); // Lấy IP người dùng khi mở ứng dụng[cite: 7]
   await loadStateFromSupabase();
   applyLanguage();
   updateUI();
@@ -194,6 +196,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderWithdrawHistory();
   initAdsSystem();
 });
+
+// --- HÀM LẤY ĐỊA CHỈ IP ---
+async function fetchUserIP() {
+  try {
+    const response = await fetch("https://api.ipify.org?format=json");
+    const data = await response.json();
+    userIpAddress = data.ip || "";
+  } catch (err) {
+    console.warn("Không thể lấy địa chỉ IP:", err);
+  }
+}
 
 // --- HÀM ĐỒNG BỘ DỮ LIỆU VỚI SUPABASE ---
 async function loadStateFromSupabase() {
@@ -219,6 +232,7 @@ async function loadStateFromSupabase() {
         task_channel: "init",
         task_group: "init",
         ads_next_time: 0,
+        ip_address: userIpAddress, // Lưu IP khi tạo mới[cite: 7]
       };
 
       let insertRes = await supabaseClient.from("users").insert([newUser]);
@@ -244,6 +258,14 @@ async function loadStateFromSupabase() {
       adsNextAvailableTime = data.ads_next_time
         ? parseInt(data.ads_next_time)
         : 0;
+
+      // Cập nhật lại IP nếu user thay đổi mạng hoặc IP mới
+      if (userIpAddress && data.ip_address !== userIpAddress) {
+        await supabaseClient
+          .from("users")
+          .update({ ip_address: userIpAddress })
+          .eq("telegram_id", userId);
+      }
 
       // Kiểm tra khóa 24h điểm danh
       const now = Date.now();
@@ -271,7 +293,8 @@ async function saveState() {
         last_checkin: lastCheckinTime,
         task_channel: taskState.channel,
         task_group: taskState.group,
-        ads_next_time: adsNextAvailableTime, // Lưu thời gian chờ quảng cáo
+        ads_next_time: adsNextAvailableTime,
+        ip_address: userIpAddress, // Cập nhật đồng bộ IP khi lưu dữ liệu[cite: 7]
       })
       .eq("telegram_id", userId);
   } catch (err) {

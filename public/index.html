@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>TA Network - Cyberpunk Mining</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="phone-frame">
+      <div class="app-container">
+        <!-- NỘI DUNG CÁC TAB -->
+        <div class="tab-content-wrapper">
+          <!-- TAB 1: MINING -->
+          <main class="tab-view active" id="tab-mining">
+            <!-- Header Profile + Đổi ngôn ngữ -->
+            <div class="profile-header-row">
+              <section class="user-profile-card">
+                <div class="user-profile-card-inner">
+                  <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">⚡</div>
+                    <div class="user-details">
+                      <span class="user-fullname" id="user-fullname"
+                        >Telegram User</span
+                      >
+                      <span class="user-username" id="username">@username</span>
+                    </div>
+                  </div>
+
+                  <div class="user-balance">
+                    <span class="balance-label" data-i18n="balance_label"
+                      >SỐ DƯ</span
+                    >
+                    <div class="balance-value">
+                      <span id="balance">0.00</span> ⚡
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <button class="lang-btn" id="lang-btn" onclick="toggleLanguage()">
+                EN
+              </button>
+            </div>
+
+            <!-- Máy đào -->
+            <div class="neon-card">
+              <div class="neon-card-inner">
+                <div class="neon-ring-wrapper">
+                  <div class="neon-ring" id="neon-ring">
+                    <div class="crystal-icon">⚡</div>
+                  </div>
+                </div>
+
+                <div class="rate-neon" id="rate-display">+240 ⚡ / 6h</div>
+
+                <div
+                  class="timer-display"
+                  id="timer-display"
+                  style="display: none"
+                >
+                  06:00:00
+                </div>
+
+                <button
+                  class="neon-btn"
+                  id="start-btn"
+                  onclick="handleAction()"
+                >
+                  <span id="btn-text" data-i18n="btn_start"
+                    >Bắt đầu đào (6 Tiếng)</span
+                  >
+                </button>
+              </div>
+            </div>
+
+            <!-- Nâng cấp -->
+            <section class="upgrade-card">
+              <div class="upgrade-card-inner">
+                <div class="upgrade-info">
+                  <div class="upgrade-level">
+                    <span data-i18n="level_label">CẤP ĐỘ:</span>
+                    <strong id="miner-level" class="level-badge">LV 1</strong>
+                  </div>
+                  <div class="upgrade-rate-detail">
+                    <span data-i18n="speed_label">Tốc độ:</span>
+                    <span id="hourly-rate">40.0 ⚡/h</span>
+                  </div>
+                </div>
+
+                <button
+                  class="upgrade-btn"
+                  id="upgrade-btn"
+                  onclick="upgradeMiner()"
+                >
+                  <div class="upgrade-btn-content">
+                    <span class="upgrade-title" data-i18n="upgrade_btn"
+                      >NÂNG CẤP</span
+                    >
+                    <span class="upgrade-cost">400 ⚡</span>
+                  </div>
+                </button>
+              </div>
+            </section>
+          </main>
+
+          <!-- TAB 2: TASKS (Đã sắp xếp: Xem quảng cáo lên đầu -> Điểm danh -> Nhiệm vụ nhóm) -->
+          <section class="tab-view" id="tab-tasks">
+            <div class="tasks-container">
+              <!-- 1. CARD XEM QUẢNG CÁO (Đứng đầu tiên) -->
+              <div class="ads-card">
+                <div class="ads-card-header">
+                  <span class="ads-card-title" data-i18n="ads_card_title"
+                    >XEM QUẢNG CÁO</span
+                  >
+                  <div
+                    class="ads-timer-badge"
+                    id="ads-timer-badge"
+                    style="display: none"
+                  >
+                    15:00
+                  </div>
+                </div>
+
+                <div class="ads-box-wrapper">
+                  <div class="ads-box" id="ads-banner-btn" onclick="watchAds()">
+                    <div class="ads-box-icon">📺</div>
+                    <div class="ads-box-name" data-i18n="ads_box_name">
+                      Xem Quảng Cáo
+                    </div>
+                    <div class="ads-box-reward">+150 ⚡</div>
+                  </div>
+                </div>
+
+                <div class="ads-notes">
+                  <div data-i18n="ads_note_warning">
+                    ⚠️ Chú ý: Xem hết video để nhận quà!
+                  </div>
+                  <div data-i18n="ads_note_cooldown">
+                    * Có thể nhận lại sau 15 phút
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. ĐIỂM DANH HẰNG NGÀY (Đứng thứ hai) -->
+              <div class="daily-card">
+                <div class="daily-info">
+                  <div class="daily-icon">📅</div>
+                  <div>
+                    <div class="tasks-header" data-i18n="daily_title">
+                      Điểm Danh Hằng Ngày
+                    </div>
+                    <div class="task-reward">+10 ⚡</div>
+                  </div>
+                </div>
+                <button
+                  class="task-btn claim-btn"
+                  id="daily-btn"
+                  onclick="claimDailyReward()"
+                  data-i18n="btn_checkin"
+                >
+                  Nhận
+                </button>
+              </div>
+
+              <!-- 3. NHIỆM VỤ TELEGRAM (Đứng cuối) -->
+              <div class="task-section-group">
+                <div class="tasks-header" data-i18n="social_tasks_title">
+                  Nhiệm Vụ Telegram
+                </div>
+                <div class="task-list">
+                  <!-- Kênh Telegram -->
+                  <div class="task-item">
+                    <div class="task-info">
+                      <div class="task-icon">📢</div>
+                      <div>
+                        <div class="task-name" data-i18n="task_channel_name">
+                          Kênh Telegram chính thức
+                        </div>
+                        <div class="task-reward">+50 ⚡</div>
+                      </div>
+                    </div>
+                    <button
+                      class="task-btn"
+                      id="btn-task-channel"
+                      onclick="
+                        processTask('channel', 'https://t.me/your_channel')
+                      "
+                      data-i18n="btn_do_task"
+                    >
+                      Thực hiện
+                    </button>
+                  </div>
+
+                  <!-- Nhóm Chat Telegram -->
+                  <div class="task-item">
+                    <div class="task-info">
+                      <div class="task-icon">💬</div>
+                      <div>
+                        <div class="task-name" data-i18n="task_group_name">
+                          Nhóm Chat Telegram
+                        </div>
+                        <div class="task-reward">+50 ⚡</div>
+                      </div>
+                    </div>
+                    <button
+                      class="task-btn"
+                      id="btn-task-group"
+                      onclick="processTask('group', 'https://t.me/your_group')"
+                      data-i18n="btn_do_task"
+                    >
+                      Thực hiện
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 3: INVITE -->
+          <section class="tab-view" id="tab-invite">
+            <div class="invite-container">
+              <div class="invite-banner">
+                <div class="banner-icon">👥</div>
+                <div class="banner-text">
+                  <h3 data-i18n="invite_banner_title">Mời Bạn Bè!</h3>
+                  <p data-i18n="invite_banner_desc">
+                    Nhận ngay +100 ⚡ cho mỗi người bạn tham gia!
+                  </p>
+                </div>
+              </div>
+
+              <div class="ref-link-card">
+                <span class="ref-label" data-i18n="ref_link_label"
+                  >LINK GIỚI THIỆU CỦA BẠN</span
+                >
+                <div class="ref-box">
+                  <input
+                    type="text"
+                    id="ref-link-input"
+                    readonly
+                    value="https://t.me/your_bot?start=ref_user"
+                  />
+                  <button class="copy-btn" onclick="copyRefLink()">
+                    <span id="copy-btn-text" data-i18n="btn_copy">Copy</span>
+                  </button>
+                </div>
+                <button class="share-btn" onclick="shareRefLink()">
+                  <span>🚀</span>
+                  <span data-i18n="btn_invite_friend"
+                    >Mời Bạn Bè Trên Telegram</span
+                  >
+                </button>
+              </div>
+
+              <div class="frends-header">
+                <span data-i18n="frends_list_title">Danh Sách Bạn Bè</span>
+                <span class="frends-count" id="frends-count"
+                  >0 <span data-i18n="unit_friends">Bạn</span></span
+                >
+              </div>
+
+              <div class="frends-list" id="frends-list">
+                <div
+                  class="empty-frends"
+                  id="empty-frends"
+                  data-i18n="empty_frends"
+                >
+                  Chưa có ai tham gia. Hãy gửi link để mời bạn bè ngay!
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 4: WALLET -->
+          <section class="tab-view" id="tab-wallet">
+            <div class="wallet-container">
+              <div class="withdraw-card">
+                <div class="withdraw-header">
+                  <h3 class="tab-title" data-i18n="wallet_title">
+                    Ví Web3 & Rút Coin
+                  </h3>
+                  <p class="rate-info">💎 1,000,000 ⚡ = 1 TON</p>
+                </div>
+
+                <div class="withdraw-form">
+                  <div class="input-group">
+                    <label class="input-label" data-i18n="wallet_label_address"
+                      >Địa chỉ ví TON</label
+                    >
+                    <input
+                      type="text"
+                      id="withdraw-address"
+                      data-i18n-placeholder="wallet_placeholder_address"
+                      placeholder="Nhập địa chỉ ví (ví dụ: EQD...)"
+                    />
+                  </div>
+
+                  <div class="input-group">
+                    <div class="input-label-row">
+                      <label class="input-label" data-i18n="wallet_label_amount"
+                        >Số lượng ⚡ muốn rút</label
+                      >
+                      <span class="calc-ton" id="calc-ton-text"
+                        >≈ 0.0000 TON</span
+                      >
+                    </div>
+                    <input
+                      type="number"
+                      id="withdraw-amount"
+                      data-i18n-placeholder="wallet_placeholder_amount"
+                      placeholder="Nhập số coin (Tối thiểu 10,000 ⚡)"
+                      oninput="updateTonEstimate()"
+                    />
+                  </div>
+
+                  <button
+                    class="withdraw-btn"
+                    id="withdraw-submit-btn"
+                    onclick="submitWithdrawRequest()"
+                  >
+                    <span data-i18n="wallet_btn_submit"
+                      >🚀 GỬI YÊU CẦU RÚT COIN</span
+                    >
+                  </button>
+                </div>
+              </div>
+
+              <div class="history-card">
+                <div class="history-header" data-i18n="wallet_history_title">
+                  📜 Lịch Sử Rút Tiền
+                </div>
+                <div class="history-list" id="history-list"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Navigation Bar -->
+        <nav class="bottom-nav">
+          <button class="nav-item active" onclick="switchTab('mining', this)">
+            <span class="nav-icon">⛏️</span
+            ><span data-i18n="nav_mining">Mining</span>
+          </button>
+          <button class="nav-item" onclick="switchTab('tasks', this)">
+            <span class="nav-icon">📋</span
+            ><span data-i18n="nav_tasks">Tasks</span>
+          </button>
+          <button class="nav-item" onclick="switchTab('invite', this)">
+            <span class="nav-icon">👥</span
+            ><span data-i18n="nav_invite">Invite</span>
+          </button>
+          <button class="nav-item" onclick="switchTab('wallet', this)">
+            <span class="nav-icon">👛</span
+            ><span data-i18n="nav_wallet">Wallet</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- POPUP MODAL THÔNG BÁO -->
+      <div class="modal-overlay" id="custom-modal">
+        <div class="modal-card">
+          <div class="modal-icon" id="modal-icon">🚀</div>
+          <h3 class="modal-title" id="modal-title">Thành công!</h3>
+          <p class="modal-desc" id="modal-desc">
+            Thao tác của bạn đã hoàn tất.
+          </p>
+          <button
+            class="modal-btn"
+            onclick="closeModal()"
+            data-i18n="modal_close_btn"
+          >
+            ĐÃ HIỂU
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

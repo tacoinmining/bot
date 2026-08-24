@@ -54,7 +54,8 @@ const translations = {
     btn_invite_friend: "Mời Bạn Bè Trên Telegram",
 
     modal_start_title: "Khởi Động Thành Công! 🚀",
-    modal_start_desc: "Máy đào đã hoạt động. Hãy quay lại sau 6 tiếng để thu hoạch coin nhé!",
+    modal_start_desc:
+      "Máy đào đã hoạt động. Hãy quay lại sau 6 tiếng để thu hoạch coin nhé!",
     modal_upgrade_title: "Nâng Cấp Thành Công! ⚡",
     modal_upgrade_desc: "Máy đào của bạn đã đạt Cấp độ ",
     modal_claim_title: "Thu Hoạch Thành Công! 🎁",
@@ -70,9 +71,11 @@ const translations = {
     alert_err_min_title: "Không Thể Rút! ⚠️",
     alert_err_min_desc: "Số lượng rút tối thiểu là 10,000 ⚡.",
     alert_err_balance_title: "Thiếu Số Dư! 💸",
-    alert_err_balance_desc: "Số dư của bạn không đủ để thực hiện giao dịch này.",
+    alert_err_balance_desc:
+      "Số dư của bạn không đủ để thực hiện giao dịch này.",
     alert_pending_title: "Đã Gửi Yêu Cầu! ⏳",
-    alert_pending_desc: "Yêu cầu rút tiền của bạn đã được gửi. Đang chờ Admin duyệt!",
+    alert_pending_desc:
+      "Yêu cầu rút tiền của bạn đã được gửi. Đang chờ Admin duyệt!",
 
     status_pending: "Đang chờ ⏳",
     status_success: "Thành công ✅",
@@ -122,7 +125,8 @@ const translations = {
     btn_invite_friend: "Invite Friends via Telegram",
 
     modal_start_title: "Started Successfully! 🚀",
-    modal_start_desc: "Miner is active. Come back in 6 hours to claim your reward!",
+    modal_start_desc:
+      "Miner is active. Come back in 6 hours to claim your reward!",
     modal_upgrade_title: "Upgraded Successfully! ⚡",
     modal_upgrade_desc: "Your miner has reached Level ",
     modal_claim_title: "Claimed Successfully! 🎁",
@@ -138,9 +142,11 @@ const translations = {
     alert_err_min_title: "Cannot Withdraw! ⚠️",
     alert_err_min_desc: "Minimum withdrawal amount is 10,000 ⚡.",
     alert_err_balance_title: "Insufficient Balance! 💸",
-    alert_err_balance_desc: "Your balance is insufficient for this transaction.",
+    alert_err_balance_desc:
+      "Your balance is insufficient for this transaction.",
     alert_pending_title: "Request Submitted! ⏳",
-    alert_pending_desc: "Your withdrawal request has been submitted. Pending Admin approval!",
+    alert_pending_desc:
+      "Your withdrawal request has been submitted. Pending Admin approval!",
 
     status_pending: "Pending ⏳",
     status_success: "Success ✅",
@@ -158,8 +164,7 @@ const MINING_DURATION = 6 * 60 * 60 * 1000;
 const UPGRADE_COST = 400.0;
 const BASE_HOURLY_RATE = 40.0;
 const RATE_INCREASE_PER_LEVEL = 1.0;
-// Tỷ lệ chuẩn: 1,000,000 ⚡ = 1 TON => 1 ⚡ = 0.000001 TON
-const TON_RATE = 0.000001; 
+const TON_RATE = 0.000001;
 const ADS_COOLDOWN_TIME = 15 * 60 * 1000;
 
 // BIẾN TRẠNG THÁI GAME
@@ -182,6 +187,7 @@ let taskState = {
   group: "init",
 };
 let lastCheckinTime = 0;
+
 let withdrawHistory = [];
 
 // KHỞI CHẠY ỨNG DỤNG VÀ TẢI TỪ SUPABASE
@@ -189,14 +195,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   initUserTelegram();
   await fetchUserIP();
   await loadStateFromSupabase();
-  await loadWithdrawHistory();[cite: 3]
+  await loadWithdrawHistory(); // Tải lịch sử rút tiền từ Supabase[cite: 3]
   applyLanguage();
   updateUI();
   updateTaskUI();
   setupRefLink();
   updateWalletUIState();
   initAdsSystem();
-  initSupabaseRealtime();
+  initSupabaseRealtime(); // Lắng nghe thay đổi trạng thái duyệt đơn tự động
 });
 
 // --- LẮNG NGHE THAY ĐỔI TRẠNG THÁI REALTIME TỪ SUPABASE ---
@@ -213,7 +219,7 @@ function initSupabaseRealtime() {
       },
       (payload) => {
         console.log("Đơn rút tiền thay đổi trạng thái:", payload.new);
-        loadWithdrawHistory();
+        loadWithdrawHistory(); // Tải lại lịch sử ngay khi Admin bấm nút duyệt/từ chối
       },
     )
     .subscribe();
@@ -273,6 +279,10 @@ async function loadStateFromSupabase() {
       .single();
 
     if (error || !data) {
+      console.log(
+        "Không tìm thấy user trên Supabase, đang tiến hành tạo mới cho ID:",
+        userId,
+      );
       const newUser = {
         telegram_id: userId,
         username: currentUsername,
@@ -307,7 +317,9 @@ async function loadStateFromSupabase() {
       lastCheckinTime = data.last_checkin ? parseInt(data.last_checkin) : 0;
       taskState.channel = data.task_channel || "init";
       taskState.group = data.task_group || "init";
-      adsNextAvailableTime = data.ads_next_time ? parseInt(data.ads_next_time) : 0;
+      adsNextAvailableTime = data.ads_next_time
+        ? parseInt(data.ads_next_time)
+        : 0;
       savedTonAddress = data.ton_address || "";
 
       if (userIpAddress && data.ip_address !== userIpAddress) {
@@ -356,19 +368,29 @@ function initUserTelegram() {
   if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
     const user = tg.initDataUnsafe.user;
     userId = String(user.id);
-    currentUsername = user.username ? `@${user.username}` : user.first_name || "User";
+    currentUsername = user.username
+      ? `@${user.username}`
+      : user.first_name || "User";
 
-    const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
+    const fullName = [user.first_name, user.last_name]
+      .filter(Boolean)
+      .join(" ");
 
     const userFullnameEl = document.getElementById("user-fullname");
     if (userFullnameEl) userFullnameEl.innerText = fullName || "Telegram User";
 
     const usernameElem = document.getElementById("username");
     if (usernameElem) {
-      usernameElem.innerText = user.username ? `@${user.username}` : "#no_username";
+      usernameElem.innerText = user.username
+        ? `@${user.username}`
+        : "#no_username";
     }
   } else {
     userId = "12345678";
+    console.warn(
+      "Không tìm thấy môi trường Telegram, đang dùng userId giả lập:",
+      userId,
+    );
   }
 }
 
@@ -397,7 +419,8 @@ function watchAds() {
     translations[currentLang].modal_task_title,
     `${translations[currentLang].modal_task_desc} +150 ⚡ từ xem quảng cáo!`,
   );
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+  if (tg && tg.HapticFeedback)
+    tg.HapticFeedback.notificationOccurred("success");
 }
 
 function updateAdsUI() {
@@ -443,7 +466,8 @@ function copyRefLink() {
     translations[currentLang].modal_copied_desc,
   );
 
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+  if (tg && tg.HapticFeedback)
+    tg.HapticFeedback.notificationOccurred("success");
 
   setTimeout(() => {
     if (copyBtnText) copyBtnText.innerText = translations[currentLang].btn_copy;
@@ -452,7 +476,8 @@ function copyRefLink() {
 
 function shareRefLink() {
   const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
-  const shareText = "🚀 Tham gia ngay để nhận 100 ⚡ và đào $TA Token miễn phí!";
+  const shareText =
+    "🚀 Tham gia ngay để nhận 100 ⚡ và đào $TA Token miễn phí!";
   const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`;
 
   if (tg && tg.openTelegramLink) tg.openTelegramLink(fullUrl);
@@ -509,7 +534,8 @@ function claimDailyReward() {
     translations[currentLang].modal_task_title,
     `${translations[currentLang].modal_task_desc} +10 ⚡!`,
   );
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+  if (tg && tg.HapticFeedback)
+    tg.HapticFeedback.notificationOccurred("success");
 }
 
 function processTask(taskId, url) {
@@ -543,7 +569,8 @@ function processTask(taskId, url) {
       translations[currentLang].modal_task_title,
       `${translations[currentLang].modal_task_desc} +${reward} ⚡!`,
     );
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+    if (tg && tg.HapticFeedback)
+      tg.HapticFeedback.notificationOccurred("success");
   }
 }
 
@@ -587,9 +614,11 @@ function upgradeMiner() {
       translations[currentLang].modal_upgrade_title,
       `${translations[currentLang].modal_upgrade_desc} ${minerLevel}!`,
     );
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+    if (tg && tg.HapticFeedback)
+      tg.HapticFeedback.notificationOccurred("success");
   } else {
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
+    if (tg && tg.HapticFeedback)
+      tg.HapticFeedback.notificationOccurred("error");
   }
 }
 
@@ -608,7 +637,8 @@ function startMining() {
     translations[currentLang].modal_start_title,
     translations[currentLang].modal_start_desc,
   );
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+  if (tg && tg.HapticFeedback)
+    tg.HapticFeedback.notificationOccurred("success");
 }
 
 function claimReward() {
@@ -622,7 +652,8 @@ function claimReward() {
     translations[currentLang].modal_claim_title,
     `${translations[currentLang].modal_claim_desc} +${reward.toFixed(0)} ⚡!`,
   );
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+  if (tg && tg.HapticFeedback)
+    tg.HapticFeedback.notificationOccurred("success");
 }
 
 function updateUI() {
@@ -642,8 +673,10 @@ function updateUI() {
 
   if (balanceEl) balanceEl.innerText = balance.toFixed(2);
   if (minerLevelEl) minerLevelEl.innerText = `LV ${minerLevel}`;
-  if (hourlyRateEl) hourlyRateEl.innerText = `${getHourlyRate().toFixed(1)} ⚡/h`;
-  if (rateDisplayEl) rateDisplayEl.innerText = `+${getCycleReward().toFixed(0)} ⚡ / 6h`;
+  if (hourlyRateEl)
+    hourlyRateEl.innerText = `${getHourlyRate().toFixed(1)} ⚡/h`;
+  if (rateDisplayEl)
+    rateDisplayEl.innerText = `+${getCycleReward().toFixed(0)} ⚡ / 6h`;
 
   if (upgradeBtn) {
     if (balance < UPGRADE_COST) upgradeBtn.classList.add("disabled");
@@ -753,7 +786,8 @@ function saveWalletAddress() {
       translations[currentLang].alert_err_address_title,
       translations[currentLang].alert_err_address_desc,
     );
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
+    if (tg && tg.HapticFeedback)
+      tg.HapticFeedback.notificationOccurred("error");
     return;
   }
 
@@ -761,7 +795,8 @@ function saveWalletAddress() {
   updateWalletUIState();
   saveState();
 
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+  if (tg && tg.HapticFeedback)
+    tg.HapticFeedback.notificationOccurred("success");
 }
 
 function editWalletAddress() {
@@ -799,7 +834,7 @@ function updateTonEstimate() {
   calcText.innerText = `≈ ${estimatedTon.toFixed(4)} TON`;
 }
 
-// --- HÀM GỬI THÔNG BÁO VỀ TELEGRAM CHO ADMIN ---
+// --- HÀM GỬI THÔNG BÁO VỀ TELEGRAM CHO ADMIN (CÓ KÈM NÚT DUYỆT / TỪ CHỐI) ---
 async function sendTelegramAdminNotification(
   withdrawalId,
   username,
@@ -858,7 +893,8 @@ async function submitWithdrawRequest() {
       translations[currentLang].alert_err_address_title,
       "Vui lòng nhập và lưu địa chỉ ví TON trước khi rút!",
     );
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
+    if (tg && tg.HapticFeedback)
+      tg.HapticFeedback.notificationOccurred("error");
     return;
   }
 
@@ -868,7 +904,8 @@ async function submitWithdrawRequest() {
       translations[currentLang].alert_err_min_title,
       translations[currentLang].alert_err_min_desc,
     );
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("warning");
+    if (tg && tg.HapticFeedback)
+      tg.HapticFeedback.notificationOccurred("warning");
     return;
   }
 
@@ -878,12 +915,14 @@ async function submitWithdrawRequest() {
       translations[currentLang].alert_err_balance_title,
       translations[currentLang].alert_err_balance_desc,
     );
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
+    if (tg && tg.HapticFeedback)
+      tg.HapticFeedback.notificationOccurred("error");
     return;
   }
 
   const tonAmountCalc = parseFloat((amount * TON_RATE).toFixed(4));
 
+  // 1. Đẩy lệnh rút tiền lên bảng "withdrawals" trên Supabase và lấy về ID dòng vừa tạo
   const newTx = {
     telegram_id: userId,
     amount: amount,
@@ -899,12 +938,17 @@ async function submitWithdrawRequest() {
 
   if (error || !data || data.length === 0) {
     console.error("Lỗi khi lưu lịch sử rút tiền lên Supabase:", error);
-    showModal("❌", "Lỗi Server", "Không thể gửi yêu cầu rút tiền. Vui lòng thử lại sau.");
+    showModal(
+      "❌",
+      "Lỗi Server",
+      "Không thể gửi yêu cầu rút tiền. Vui lòng thử lại sau.",
+    );
     return;
   }
 
   const insertedId = data[0].id;
 
+  // 2. 🚀 GỬI TIN NHẮN KÈM NÚT DUYỆT VỀ TELEGRAM CHO ADMIN
   await sendTelegramAdminNotification(
     insertedId,
     currentUsername,
@@ -913,9 +957,11 @@ async function submitWithdrawRequest() {
     address,
   );
 
+  // 3. Trừ tiền và cập nhật trạng thái mới của user lên bảng "users"
   balance -= amount;
   await saveState();
 
+  // 4. Reset ô nhập và tải lại lịch sử từ Supabase
   amountInput.value = "";
   updateTonEstimate();
   updateUI();
@@ -926,7 +972,8 @@ async function submitWithdrawRequest() {
     translations[currentLang].alert_pending_title,
     translations[currentLang].alert_pending_desc,
   );
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+  if (tg && tg.HapticFeedback)
+    tg.HapticFeedback.notificationOccurred("success");
 }
 
 function renderWithdrawHistory() {

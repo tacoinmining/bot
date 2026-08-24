@@ -390,7 +390,7 @@ async function saveState() {
         task_group: taskState.group,
         ads_next_time: adsNextAvailableTime,
         ip_address: userIpAddress,
-        ton_address: savedTonAddress, // Đã bổ sung ton_address vào đây để lưu thành công
+        ton_address: savedTonAddress, // Cực kỳ quan trọng
         used_promo_codes: usedPromoCodes,
       })
       .eq("telegram_id", userId);

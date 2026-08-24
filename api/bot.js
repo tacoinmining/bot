@@ -8,8 +8,8 @@ bot.start((ctx) => {
   const welcomeMessage =
     `🚀*Welcome to TA COINS MINING – Your Ultimate Mining Empire!*\n\n` +
     `Step into the future of digital asset generation with TA COINS MINING, the most engaging and rewarding tap-to-earn Mini App right inside Telegram!\n\n` +
-    `⛏️ *Start Mining Instantly:* Launch the app and begin accumulating TA Coins.\n` +
-    `⚡ *Watch & Earn More:* Watch short video ads to instantly claim *+150 ⚡ Energy*.\n` +
+    `⛏️ *Start Mining Instantly:* Launch the app and begin accumulating TA Coins.\n\n` +
+    `⚡ *Watch & Earn More:* Watch short video ads to instantly claim *+150 ⚡ Energy*.\n\n` +
     `📊 *Track Your Progress:* Monitor your live balance and manage your profile seamlessly.\n\n` +
     `👉 *Tap the button below to launch the Mini App and start mining!*`;
 

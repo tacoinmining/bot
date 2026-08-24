@@ -1,6 +1,9 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
+// ĐỔI TÊN BOT CỦA BẠN VÀO ĐÂY
+const BOT_USERNAME = "https://t.me/tacoinmining_bot";
+
 // DICTIONARY ĐA NGÔN NGỮ (VI / EN)
 const translations = {
   vi: {
@@ -13,9 +16,6 @@ const translations = {
     upgrade_btn: "NÂNG CẤP",
     tasks_title: "Nhiệm Vụ Nhận Coin",
     tasks_desc: "Hoàn thành nhiệm vụ để kiếm thêm $TA",
-    invite_title: "Mời Bạn Bè",
-    invite_desc: "Nhận 10% hoa hồng từ người bạn giới thiệu",
-    invite_box: "👥 Link giới thiệu sẽ cập nhật ở đây",
     wallet_title: "Ví Web3",
     wallet_desc: "Rút $TA về ví cá nhân của bạn",
     wallet_box: "👛 Cổng kết nối ví (TON Wallet)",
@@ -34,6 +34,17 @@ const translations = {
     btn_claim_task: "Nhận Coin",
     btn_done: "Đã hoàn thành",
 
+    // INVITE TRANSLATIONS
+    invite_banner_title: "Mời Bạn Bè!",
+    invite_banner_desc:
+      "Nhận ngay +20 ⚡ cho mỗi người bạn & 10% hoa hồng đào!",
+    ref_link_label: "LINK GIỚI THIỆU CỦA BẠN",
+    btn_copy: "Copy",
+    btn_copied: "Đã Copy!",
+    btn_invite_friend: "Mời Bạn Bè Trên Telegram",
+    frends_list_title: "Danh Sách Bạn Bè",
+    empty_frends: "Chưa có ai tham gia. Hãy gửi link để mời bạn bè ngay!",
+
     // MODAL TEXTS
     modal_start_title: "Khởi Động Thành Công! 🚀",
     modal_start_desc:
@@ -44,6 +55,8 @@ const translations = {
     modal_claim_desc: "Bạn đã nhận thành công ",
     modal_task_title: "Nhiệm Vụ Hoàn Thành! 🎉",
     modal_task_desc: "Bạn đã nhận được ",
+    modal_copied_title: "Đã Sao Chép! 📋",
+    modal_copied_desc: "Link giới thiệu đã được lưu vào bộ nhớ tạm.",
     modal_close_btn: "ĐÃ HIỂU",
   },
   en: {
@@ -56,9 +69,6 @@ const translations = {
     upgrade_btn: "UPGRADE",
     tasks_title: "Earn Tasks",
     tasks_desc: "Complete tasks to earn more $TA",
-    invite_title: "Invite Friends",
-    invite_desc: "Get 10% commission from your friends",
-    invite_box: "👥 Referral link will be updated here",
     wallet_title: "Web3 Wallet",
     wallet_desc: "Withdraw $TA to your personal wallet",
     wallet_box: "👛 Wallet connection (TON Wallet)",
@@ -77,6 +87,17 @@ const translations = {
     btn_claim_task: "Claim",
     btn_done: "Completed",
 
+    // INVITE TRANSLATIONS
+    invite_banner_title: "Invite Friends!",
+    invite_banner_desc:
+      "Get +20 ⚡ per friend & 10% commission from their mining!",
+    ref_link_label: "YOUR REFERRAL LINK",
+    btn_copy: "Copy",
+    btn_copied: "Copied!",
+    btn_invite_friend: "Invite Friends via Telegram",
+    frends_list_title: "Friends List",
+    empty_frends: "No friends yet. Share your link to invite now!",
+
     // MODAL TEXTS
     modal_start_title: "Started Successfully! 🚀",
     modal_start_desc:
@@ -87,6 +108,8 @@ const translations = {
     modal_claim_desc: "You have successfully claimed ",
     modal_task_title: "Task Completed! 🎉",
     modal_task_desc: "You have received ",
+    modal_copied_title: "Copied! 📋",
+    modal_copied_desc: "Referral link copied to clipboard.",
     modal_close_btn: "GOT IT",
   },
 };
@@ -100,11 +123,11 @@ let minerLevel = 1;
 let endTime = null;
 let currentLang = "vi";
 let timerInterval = null;
+let userId = "12345678"; // ID mặc định khi chạy browser test
 
-// QUẢN LÝ TRẠNG THÁI 2 NHIỆM VỤ TELEGRAM
 const taskState = {
   daily: false,
-  channel: "init", // init -> waiting -> claimed
+  channel: "init",
   group: "init",
 };
 
@@ -112,11 +135,13 @@ document.addEventListener("DOMContentLoaded", () => {
   initUserTelegram();
   applyLanguage();
   updateUI();
+  setupRefLink();
 });
 
 function initUserTelegram() {
   if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
     const user = tg.initDataUnsafe.user;
+    userId = user.id;
     const fullName = [user.first_name, user.last_name]
       .filter(Boolean)
       .join(" ");
@@ -132,6 +157,53 @@ function initUserTelegram() {
   }
 }
 
+/* ========================================================= */
+/* LOGIC TAB INVITE (MỜI BẠN BÈ) */
+/* ========================================================= */
+function setupRefLink() {
+  const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+  const input = document.getElementById("ref-link-input");
+  if (input) input.value = refLink;
+}
+
+function copyRefLink() {
+  const input = document.getElementById("ref-link-input");
+  input.select();
+  document.execCommand("copy");
+
+  const copyBtnText = document.getElementById("copy-btn-text");
+  copyBtnText.innerText = translations[currentLang].btn_copied;
+
+  showModal(
+    "📋",
+    translations[currentLang].modal_copied_title,
+    translations[currentLang].modal_copied_desc,
+  );
+
+  if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+
+  setTimeout(() => {
+    copyBtnText.innerText = translations[currentLang].btn_copy;
+  }, 2000);
+}
+
+function shareRefLink() {
+  const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+  const shareText = "🚀 Cùng tham gia đào $TA Token miễn phí ngay hôm nay!";
+  const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`;
+
+  if (tg.openTelegramLink) {
+    tg.openTelegramLink(fullUrl);
+  } else {
+    window.open(fullUrl, "_blank");
+  }
+
+  if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
+}
+
+/* ========================================================= */
+/* LOGIC CHUNG & TIỆN ÍCH */
+/* ========================================================= */
 function getCycleReward() {
   return 20.0 + (minerLevel - 1) * 2.0;
 }
@@ -152,7 +224,7 @@ function closeModal() {
 }
 
 /* ========================================================= */
-/* LOGIC TAB NHIỆM VỤ (TASKS) */
+/* TASKS LOGIC */
 /* ========================================================= */
 function claimDailyReward() {
   if (!taskState.daily) {
@@ -166,7 +238,6 @@ function claimDailyReward() {
       translations[currentLang].modal_task_title,
       `${translations[currentLang].modal_task_desc} +10 ⚡!`,
     );
-
     if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
   }
 }
@@ -175,11 +246,8 @@ function processTask(taskId, url) {
   const btn = document.getElementById(`btn-task-${taskId}`);
 
   if (taskState[taskId] === "init") {
-    if (tg.openTelegramLink) {
-      tg.openTelegramLink(url);
-    } else {
-      window.open(url, "_blank");
-    }
+    if (tg.openTelegramLink) tg.openTelegramLink(url);
+    else window.open(url, "_blank");
 
     taskState[taskId] = "waiting";
     btn.innerText = "3s...";
@@ -203,7 +271,6 @@ function processTask(taskId, url) {
       translations[currentLang].modal_task_title,
       `${translations[currentLang].modal_task_desc} +${reward} ⚡!`,
     );
-
     if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
   }
 }
@@ -230,20 +297,18 @@ function updateTaskUI() {
 }
 
 /* ========================================================= */
-/* MINING & UPGRADE LOGIC */
+/* MINING LOGIC */
 /* ========================================================= */
 function upgradeMiner() {
   if (balance >= UPGRADE_COST) {
     balance -= UPGRADE_COST;
     minerLevel += 1;
     updateUI();
-
     showModal(
       "⚡",
       translations[currentLang].modal_upgrade_title,
       `${translations[currentLang].modal_upgrade_desc} ${minerLevel}!`,
     );
-
     if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
   } else {
     if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
@@ -252,23 +317,18 @@ function upgradeMiner() {
 
 function handleAction() {
   const now = Date.now();
-  if (!endTime) {
-    startMining();
-  } else if (now >= endTime) {
-    claimReward();
-  }
+  if (!endTime) startMining();
+  else if (now >= endTime) claimReward();
 }
 
 function startMining() {
   endTime = Date.now() + MINING_DURATION;
   updateUI();
-
   showModal(
     "🚀",
     translations[currentLang].modal_start_title,
     translations[currentLang].modal_start_desc,
   );
-
   if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 }
 
@@ -277,13 +337,11 @@ function claimReward() {
   balance += reward;
   endTime = null;
   updateUI();
-
   showModal(
     "🎁",
     translations[currentLang].modal_claim_title,
     `${translations[currentLang].modal_claim_desc} +${reward.toFixed(1)} ⚡!`,
   );
-
   if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 }
 
@@ -302,11 +360,8 @@ function updateUI() {
   document.getElementById("rate-display").innerText =
     `+${getCycleReward().toFixed(1)} ⚡ / 6h`;
 
-  if (balance < UPGRADE_COST) {
-    upgradeBtn.classList.add("disabled");
-  } else {
-    upgradeBtn.classList.remove("disabled");
-  }
+  if (balance < UPGRADE_COST) upgradeBtn.classList.add("disabled");
+  else upgradeBtn.classList.remove("disabled");
 
   if (timerInterval) clearInterval(timerInterval);
 
@@ -320,7 +375,6 @@ function updateUI() {
     btnText.innerText = translations[currentLang].btn_mining;
     timerDisplay.style.display = "block";
     neonRing.classList.add("active");
-
     renderTimer();
     timerInterval = setInterval(renderTimer, 1000);
   } else {
@@ -333,13 +387,11 @@ function updateUI() {
 
 function renderTimer() {
   const remaining = endTime - Date.now();
-
   if (remaining <= 0) {
     clearInterval(timerInterval);
     updateUI();
     return;
   }
-
   const hours = Math.floor(remaining / (1000 * 60 * 60));
   const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
@@ -357,7 +409,6 @@ function toggleLanguage() {
   applyLanguage();
   updateUI();
   updateTaskUI();
-
   if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
 }
 

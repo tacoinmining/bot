@@ -150,6 +150,47 @@
             </div>
           </section>
 
+          <!-- TAB 3: INVITE -->
+          <section class="tab-view" id="tab-invite">
+            <div class="invite-container">
+              <!-- Banner hoa hồng -->
+              <div class="invite-banner">
+                <div class="banner-icon">👥</div>
+                <div class="banner-text">
+                  <h3 data-i18n="invite_banner_title">Mời Bạn Bè!</h3>
+                  <p data-i18n="invite_banner_desc">Nhận ngay +20 ⚡ cho mỗi người bạn & 10% hoa hồng đào!</p>
+                </div>
+              </div>
+
+              <!-- Ô hiển thị Link & Nút action -->
+              <div class="ref-link-card">
+                <span class="ref-label" data-i18n="ref_link_label">LINK GIỚI THIỆU CỦA BẠN</span>
+                <div class="ref-box">
+                  <input type="text" id="ref-link-input" readonly value="https://t.me/your_bot?start=ref_user" />
+                  <button class="copy-btn" onclick="copyRefLink()">
+                    <span id="copy-btn-text" data-i18n="btn_copy">Copy</span>
+                  </button>
+                </div>
+                <button class="share-btn" onclick="shareRefLink()">
+                  <span>🚀</span> <span data-i18n="btn_invite_friend">Mời Bạn Bè Trên Telegram</span>
+                </button>
+              </div>
+
+              <!-- Danh sách Bạn bè đã mời -->
+              <div class="frends-header">
+                <span data-i18n="frends_list_title">Danh Sách Bạn Bè</span>
+                <span class="frends-count" id="frends-count">0 Bạn</span>
+              </div>
+
+              <div class="frends-list" id="frends-list">
+                <!-- Mẫu bạn bè hiển thị khi chưa có ai -->
+                <div class="empty-frends" id="empty-frends" data-i18n="empty_frends">
+                  Chưa có ai tham gia. Hãy gửi link để mời bạn bè ngay!
+                </div>
+              </div>
+            </div>
+          </section>
+
           <!-- TAB 4: WALLET -->
           <section class="tab-view" id="tab-wallet">
             <div class="simple-card">

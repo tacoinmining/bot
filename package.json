@@ -4,5 +4,8 @@
   "description": "Cyberpunk Mining Telegram Mini App",
   "scripts": {
     "start": "echo 'Static app ready'"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3"
   }
 }

@@ -88,7 +88,7 @@ body {
 .tab-view.active {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Khoảng cách giữa Info và Card Đào */
+  gap: 12px;
 }
 
 @keyframes fadeIn {
@@ -103,15 +103,48 @@ body {
 }
 
 /* ========================================================= */
-/* 1. KHỐI THÔNG TIN NGƯỜI CHƠI (NẰM TRONG TAB MINING) */
+/* HÀNG TRÊN NẰM NGANG: PROFILE + NÚT NGÔN NGỮ TO */
 /* ========================================================= */
-.user-profile-card {
+.profile-header-row {
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lang-btn {
+  height: 54px;
+  min-width: 52px;
+  background: rgba(0, 242, 254, 0.1);
+  border: 1.5px solid #00f2fe;
+  color: #00f2fe;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lang-btn:active {
+  transform: scale(0.92);
+  background: #00f2fe;
+  color: #080313;
+}
+
+/* KHỐI THÔNG TIN NGƯỜI CHƠI */
+.user-profile-card {
+  flex: 1;
   position: relative;
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(18, 10, 36, 0.95);
-  padding: 2px;
+  padding: 1.5px;
   overflow: hidden;
+  height: 54px;
 }
 
 .user-profile-card::before {
@@ -138,8 +171,8 @@ body {
   width: 100%;
   height: 100%;
   background: #0e081e;
-  border-radius: 16px;
-  padding: 10px 16px;
+  border-radius: 14.5px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -152,8 +185,8 @@ body {
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: rgba(0, 242, 254, 0.1);
   border: 1px solid #00f2fe;
@@ -182,14 +215,6 @@ body {
   opacity: 0.85;
 }
 
-.user-rank {
-  font-size: 11px;
-  font-weight: 800;
-  color: #00f2fe;
-  letter-spacing: 1.5px;
-  text-shadow: 0 0 8px rgba(0, 242, 254, 0.6);
-}
-
 .user-balance {
   text-align: right;
 }
@@ -203,14 +228,14 @@ body {
 }
 
 .balance-value {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
   color: #ffffff;
   text-shadow: 0 0 10px #00f2fe;
 }
 
 /* ========================================================= */
-/* 2. CARD MÁY ĐÀO CHÍNH */
+/* CARD MÁY ĐÀO CHÍNH */
 /* ========================================================= */
 .neon-card {
   width: 100%;
@@ -390,6 +415,101 @@ body {
   box-shadow: 0 5px 15px rgba(0, 255, 135, 0.35);
 }
 
+/* ========================================================= */
+/* KHỐI NÂNG CẤP MÁY ĐÀO (UPGRADE CARD) */
+/* ========================================================= */
+.upgrade-card {
+  width: 100%;
+  border-radius: 16px;
+  background: rgba(14, 8, 30, 0.95);
+  border: 1px solid rgba(255, 0, 127, 0.3);
+  padding: 10px 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.upgrade-card-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.upgrade-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.upgrade-level {
+  font-size: 11px;
+  color: #a093c4;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.level-badge {
+  background: rgba(255, 0, 127, 0.2);
+  border: 1px solid #ff007f;
+  color: #ff77e9;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.upgrade-rate-detail {
+  font-size: 12px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.upgrade-rate-detail span:last-child {
+  color: #00f2fe;
+}
+
+.upgrade-btn {
+  background: linear-gradient(135deg, #ff007f 0%, #7928ca 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 8px 16px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 12px rgba(255, 0, 127, 0.4);
+}
+
+.upgrade-btn:active {
+  transform: scale(0.95);
+}
+
+.upgrade-btn.disabled {
+  background: #251a3e;
+  color: #6b5a8e;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.upgrade-btn-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.upgrade-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.upgrade-cost {
+  font-size: 12px;
+  font-weight: 900;
+  color: #00f2fe;
+}
+
 /* CARD PHỤ CHO CÁC TAB KHÁC */
 .simple-card {
   width: 100%;
@@ -467,4 +587,89 @@ body {
     max-height: 100vh;
     border-radius: 0;
   }
+}
+
+/* ========================================================= */
+/* POPUP MODAL CYBERPUNK */
+/* ========================================================= */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(3, 1, 8, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  width: 88%;
+  background: #0e081e;
+  border: 1.5px solid #00f2fe;
+  border-radius: 20px;
+  padding: 22px 18px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 242, 254, 0.3);
+  transform: scale(0.8);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modal-overlay.active .modal-card {
+  transform: scale(1);
+}
+
+.modal-icon {
+  font-size: 42px;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 0 10px #00f2fe);
+}
+
+.modal-title {
+  color: #00f2fe;
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  text-shadow: 0 0 8px rgba(0, 242, 254, 0.5);
+}
+
+.modal-desc {
+  color: #a093c4;
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 18px;
+}
+
+.modal-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #00f2fe 0%, #ff007f 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 10px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.modal-btn:active {
+  transform: scale(0.95);
 }

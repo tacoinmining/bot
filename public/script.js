@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initUserTelegram();
   await fetchUserIP();
   await loadStateFromSupabase();
-  await loadWithdrawHistory(); // Tải lịch sử rút tiền từ Supabase[cite: 3]
+  await loadWithdrawHistory(); // Tải lịch sử rút tiền từ Supabase[cite: 12]
   applyLanguage();
   updateUI();
   updateTaskUI();
@@ -834,7 +834,15 @@ function updateTonEstimate() {
   calcText.innerText = `≈ ${estimatedTon.toFixed(4)} TON`;
 }
 
-// --- HÀM GỬI THÔNG BÁO VỀ TELEGRAM CHO ADMIN (CÓ KÈM NÚT DUYỆT / TỪ CHỐI) ---
+// --- HÀM CHE BỚT ĐỊA CHỈ VÍ TON ---
+function maskWalletAddress(wallet) {
+  if (!wallet || wallet.length <= 8) return "***";
+  const start = wallet.slice(0, 4);
+  const end = wallet.slice(-4);
+  return `${start}...${end}`;
+}
+
+// --- HÀM GỬI 2 THÔNG BÁO VỀ TELEGRAM CHO ADMIN ---
 async function sendTelegramAdminNotification(
   withdrawalId,
   username,
@@ -844,13 +852,17 @@ async function sendTelegramAdminNotification(
 ) {
   if (!ADMIN_BOT_TOKEN || !ADMIN_CHAT_ID) return;
 
-  const message =
+  const url = `https://api.telegram.org/bot${ADMIN_BOT_TOKEN}/sendMessage`;
+  const maskedWallet = maskWalletAddress(address);
+
+  // 1. Tin nhắn thứ nhất: Định dạng thông báo chuẩn kèm nút Duyệt / Từ chối
+  const message1 =
     `🚨 <b>CÓ YÊU CẦU RÚT TIỀN MỚI!</b>\n\n` +
     `👤 <b>User:</b> ${username}\n` +
     `⚡ <b>Số coin rút:</b> ${amount.toLocaleString()} ⚡\n` +
     `💎 <b>Quy đổi:</b> ${tonAmount} TON\n` +
-    `👛 <b>Ví TON:</b> <code>${address}</code>\n\n` +
-    `👉 Chọn hành động bên dưới:`;
+    `👛 <b>Ví TON:</b>\n<code>${address}</code>\n\n` +
+    `👉 Vào ngay Supabase để duyệt đơn nhé!`;
 
   const inlineKeyboard = {
     inline_keyboard: [
@@ -861,17 +873,34 @@ async function sendTelegramAdminNotification(
     ],
   };
 
-  const url = `https://api.telegram.org/bot${ADMIN_BOT_TOKEN}/sendMessage`;
+  // 2. Tin nhắn thứ hai: Thông báo chuyển tiền thành công với ví bị che khuất
+  const message2 =
+    `✅ <b>CHUYỂN TIỀN THÀNH CÔNG!</b>\n\n` +
+    `👤 <b>User:</b> ${username}\n` +
+    `💎 <b>Số tiền:</b> ${tonAmount} TON\n` +
+    `👛 <b>Ví TON:</b> <code>${maskedWallet}</code>`;
 
   try {
+    // Gửi tin nhắn 1 (Kèm nút bấm inline)
     await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: ADMIN_CHAT_ID,
-        text: message,
+        text: message1,
         parse_mode: "HTML",
         reply_markup: inlineKeyboard,
+      }),
+    });
+
+    // Gửi tin nhắn 2 (Thông báo chuyển tiền thành công, che ví)
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: ADMIN_CHAT_ID,
+        text: message2,
+        parse_mode: "HTML",
       }),
     });
   } catch (err) {
@@ -948,7 +977,7 @@ async function submitWithdrawRequest() {
 
   const insertedId = data[0].id;
 
-  // 2. 🚀 GỬI TIN NHẮN KÈM NÚT DUYỆT VỀ TELEGRAM CHO ADMIN
+  // 2. 🚀 GỬI 2 TIN NHẮN THÔNG BÁO VỀ TELEGRAM CHO ADMIN
   await sendTelegramAdminNotification(
     insertedId,
     currentUsername,

@@ -202,7 +202,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupRefLink();
   updateWalletUIState();
   initAdsSystem();
+  initSupabaseRealtime(); // Lắng nghe thay đổi trạng thái duyệt đơn tự động
 });
+
+// --- LẮNG NGHE THAY ĐỔI TRẠNG THÁI REALTIME TỪ SUPABASE ---
+function initSupabaseRealtime() {
+  supabaseClient
+    .channel("public:withdrawals")
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "withdrawals",
+        filter: `telegram_id=eq.${userId}`,
+      },
+      (payload) => {
+        console.log("Đơn rút tiền thay đổi trạng thái:", payload.new);
+        loadWithdrawHistory(); // Tải lại lịch sử ngay khi Admin bấm nút duyệt/từ chối
+      },
+    )
+    .subscribe();
+}
 
 // --- HÀM LẤY ĐỊA CHỈ IP ---
 async function fetchUserIP() {
@@ -813,8 +834,9 @@ function updateTonEstimate() {
   calcText.innerText = `≈ ${estimatedTon.toFixed(4)} TON`;
 }
 
-// --- HÀM GỬI THÔNG BÁO VỀ TELEGRAM CHO ADMIN ---
+// --- HÀM GỬI THÔNG BÁO VỀ TELEGRAM CHO ADMIN (CÓ KÈM NÚT DUYỆT / TỪ CHỐI) ---
 async function sendTelegramAdminNotification(
+  withdrawalId,
   username,
   amount,
   tonAmount,
@@ -828,7 +850,16 @@ async function sendTelegramAdminNotification(
     `⚡ <b>Số coin rút:</b> ${amount.toLocaleString()} ⚡\n` +
     `💎 <b>Quy đổi:</b> ${tonAmount} TON\n` +
     `👛 <b>Ví TON:</b> <code>${address}</code>\n\n` +
-    `👉 Vào ngay Supabase để duyệt đơn nhé!`;
+    `👉 Chọn hành động bên dưới:`;
+
+  const inlineKeyboard = {
+    inline_keyboard: [
+      [
+        { text: "✅ Duyệt", callback_data: `approve_${withdrawalId}` },
+        { text: "❌ Từ chối", callback_data: `reject_${withdrawalId}` },
+      ],
+    ],
+  };
 
   const url = `https://api.telegram.org/bot${ADMIN_BOT_TOKEN}/sendMessage`;
 
@@ -840,6 +871,7 @@ async function sendTelegramAdminNotification(
         chat_id: ADMIN_CHAT_ID,
         text: message,
         parse_mode: "HTML",
+        reply_markup: inlineKeyboard,
       }),
     });
   } catch (err) {
@@ -890,7 +922,7 @@ async function submitWithdrawRequest() {
 
   const tonAmountCalc = parseFloat((amount * TON_RATE).toFixed(4));
 
-  // 1. Đẩy lệnh rút tiền lên bảng "withdrawals" trên Supabase
+  // 1. Đẩy lệnh rút tiền lên bảng "withdrawals" trên Supabase và lấy về ID dòng vừa tạo
   const newTx = {
     telegram_id: userId,
     amount: amount,
@@ -899,9 +931,12 @@ async function submitWithdrawRequest() {
     status: "pending",
   };
 
-  const { error } = await supabaseClient.from("withdrawals").insert([newTx]);
+  const { data, error } = await supabaseClient
+    .from("withdrawals")
+    .insert([newTx])
+    .select();
 
-  if (error) {
+  if (error || !data || data.length === 0) {
     console.error("Lỗi khi lưu lịch sử rút tiền lên Supabase:", error);
     showModal(
       "❌",
@@ -911,8 +946,11 @@ async function submitWithdrawRequest() {
     return;
   }
 
-  // 2. 🚀 GỬI TIN NHẮN TING TING VỀ TELEGRAM CHO BẠN NGAY LẬP TỨC
+  const insertedId = data[0].id;
+
+  // 2. 🚀 GỬI TIN NHẮN KÈM NÚT DUYỆT VỀ TELEGRAM CHO ADMIN
   await sendTelegramAdminNotification(
+    insertedId,
     currentUsername,
     amount,
     tonAmountCalc,

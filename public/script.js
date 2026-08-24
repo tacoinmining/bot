@@ -46,7 +46,6 @@ const translations = {
     btn_claim_task: "Nhận Coin",
     btn_done: "Đã hoàn thành",
 
-    // Bổ sung dịch thuật Promo Code
     promo_title: "🎁 Mã Quà Tặng",
     promo_placeholder: "Nhập mã code của bạn...",
     promo_btn: "Xác Nhận",
@@ -91,10 +90,8 @@ const translations = {
     ads_note_warning: "⚠️ Chú ý: Xem hết video để nhận quà!",
     ads_note_cooldown: "* Có thể nhận lại sau 15 phút",
 
-    promo_title: "Mã Quà Tặng",
     promo_subtitle: "Nhập mã code để nhận phần thưởng hấp dẫn",
     promo_placeholder: "NHẬP MÃ CODE...",
-    promo_btn: "Xác Nhận",
   },
   en: {
     balance_label: "BALANCE",
@@ -127,7 +124,6 @@ const translations = {
     btn_claim_task: "Claim",
     btn_done: "Completed",
 
-    // Bổ sung dịch thuật Promo Code
     promo_title: "🎁 Promo Code",
     promo_placeholder: "Enter your promo code...",
     promo_btn: "Claim",
@@ -172,10 +168,8 @@ const translations = {
     ads_note_warning: "⚠️ Note: Watch the full video to get reward!",
     ads_note_cooldown: "* Can be claimed again after 15 minutes",
 
-    promo_title: "Promo Code",
     promo_subtitle: "Enter code to claim exciting rewards",
     promo_placeholder: "ENTER CODE...",
-    promo_btn: "Claim",
   },
 };
 
@@ -209,7 +203,7 @@ let taskState = {
 };
 let lastCheckinTime = 0;
 let withdrawHistory = [];
-let usedPromoCodes = []; // Danh sách mã code người dùng đã sử dụng
+let usedPromoCodes = [];
 
 // KHỞI CHẠY ỨNG DỤNG VÀ TẢI TỪ SUPABASE
 document.addEventListener("DOMContentLoaded", async () => {
@@ -333,6 +327,7 @@ async function loadStateFromSupabase() {
         ip_address: userIpAddress,
         is_banned: false,
         used_promo_codes: [],
+        ton_address: "", // Đã bổ sung ton_address mặc định
       };
 
       let insertRes = await supabaseClient.from("users").insert([newUser]);
@@ -395,7 +390,7 @@ async function saveState() {
         task_group: taskState.group,
         ads_next_time: adsNextAvailableTime,
         ip_address: userIpAddress,
-        ton_address: savedTonAddress,
+        ton_address: savedTonAddress, // Đã bổ sung ton_address vào đây để lưu thành công
         used_promo_codes: usedPromoCodes,
       })
       .eq("telegram_id", userId);
@@ -430,7 +425,7 @@ function initUserTelegram() {
   }
 }
 
-/* --- TÍNH NĂNG MỚI: PROMO CODE HỆ THỐNG --- */
+/* TÍNH NĂNG PROMO CODE HỆ THỐNG */
 async function claimPromoCode() {
   const inputEl = document.getElementById("promo-code-input");
   if (!inputEl) return;
@@ -441,7 +436,6 @@ async function claimPromoCode() {
     return;
   }
 
-  // 1. Kiểm tra xem tài khoản này đã từng dùng mã này chưa (lưu trong mảng cá nhân)
   if (usedPromoCodes.includes(code)) {
     showModal(
       "❌",
@@ -452,7 +446,6 @@ async function claimPromoCode() {
   }
 
   try {
-    // 2. Truy vấn thông tin mã từ bảng 'promo_codes' trên Supabase
     let { data, error } = await supabaseClient
       .from("promo_codes")
       .select("*")
@@ -474,7 +467,6 @@ async function claimPromoCode() {
     const maxUses = parseInt(data.max_uses) || 10;
     const currentUsedCount = parseInt(data.used_count) || 0;
 
-    // 3. Kiểm tra xem mã đã hết lượt nhập chưa (đạt giới hạn max_uses)
     if (currentUsedCount >= maxUses) {
       showModal(
         "⚠️",
@@ -486,7 +478,6 @@ async function claimPromoCode() {
       return;
     }
 
-    // 4. Tăng số lượng đã dùng (used_count) lên 1 trên Supabase
     let updateRes = await supabaseClient
       .from("promo_codes")
       .update({ used_count: currentUsedCount + 1 })
@@ -502,7 +493,6 @@ async function claimPromoCode() {
       return;
     }
 
-    // 5. Cộng phần thưởng coins cho người chơi và lưu lại trạng thái cá nhân
     balance += rewardAmount;
     usedPromoCodes.push(code);
 

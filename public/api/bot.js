@@ -1,7 +1,7 @@
 const { Telegraf } = require("telegraf");
 
 // Lấy Token bot từ biến môi trường trên Vercel
-const bot = new Telegraf("8931580328:AAH1yBF1GUvJgTxXng6z-Pm1OKSkRd1fvs");
+const bot = new Telegraf("8931580328:AAH1yBF1GUyVJgTxXng6z-Pm1OKSkRd1fvs");
 
 // Xử lý lệnh /start
 bot.start((ctx) => {

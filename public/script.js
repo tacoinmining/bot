@@ -218,6 +218,7 @@ async function loadStateFromSupabase() {
         last_checkin: 0,
         task_channel: "init",
         task_group: "init",
+        ads_next_time: 0,
       };
 
       let insertRes = await supabaseClient.from("users").insert([newUser]);
@@ -231,6 +232,7 @@ async function loadStateFromSupabase() {
       lastCheckinTime = 0;
       taskState.channel = "init";
       taskState.group = "init";
+      adsNextAvailableTime = 0;
     } else {
       balance = parseFloat(data.balance) || 0;
       minerLevel = parseInt(data.miner_level) || 1;
@@ -239,6 +241,9 @@ async function loadStateFromSupabase() {
       lastCheckinTime = data.last_checkin ? parseInt(data.last_checkin) : 0;
       taskState.channel = data.task_channel || "init";
       taskState.group = data.task_group || "init";
+      adsNextAvailableTime = data.ads_next_time
+        ? parseInt(data.ads_next_time)
+        : 0;
 
       // Kiểm tra khóa 24h điểm danh
       const now = Date.now();
@@ -266,6 +271,7 @@ async function saveState() {
         last_checkin: lastCheckinTime,
         task_channel: taskState.channel,
         task_group: taskState.group,
+        ads_next_time: adsNextAvailableTime, // Lưu thời gian chờ quảng cáo
       })
       .eq("telegram_id", userId);
   } catch (err) {
@@ -431,10 +437,10 @@ function claimDailyReward() {
   }
 
   taskState.daily = true;
-  lastCheckinTime = now; // Gán thời gian hiện tại
+  lastCheckinTime = now;
   balance += 10.0;
 
-  saveState(); // Lưu ngay lập tức lên Supabase
+  saveState();
   updateUI();
   updateTaskUI();
 

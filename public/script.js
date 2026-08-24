@@ -397,59 +397,77 @@ function initAdsSystem() {
 let lastAdTime = 0;
 const AD_COOLDOWN = 15 * 60 * 1000; // 15 phút tính bằng mili-giây
 
-// Khởi tạo Adsgram Controller (Thay 'YOUR_ADSGRAM_BLOCK_ID' bằng Block ID thực tế của bạn)
+/* HỆ THỐNG XEM QUẢNG CÁO ADSGRAM */
 const adController = window.Adsgram
   ? window.Adsgram.init({ blockId: "44419" })
   : null;
 
+function initAdsSystem() {
+  updateAdsUI();
+  if (adsTimerInterval) clearInterval(adsTimerInterval);
+  adsTimerInterval = setInterval(updateAdsUI, 1000);
+}
+
 async function watchAds() {
   const now = Date.now();
-  const elapsed = now - lastAdTime;
 
-  // Kiểm tra thời gian chờ (Cooldown 15 phút)
-  if (elapsed < AD_COOLDOWN) {
-    const remainingMinutes = Math.ceil((AD_COOLDOWN - elapsed) / 60000);
+  // Kiểm tra thời gian cooldown (15 phút)
+  if (now < adsNextAvailableTime) {
+    const remaining = adsNextAvailableTime - now;
+    const remainingMinutes = Math.ceil(remaining / 60000);
     showModal(
-      "⏳ Chưa đến lúc!",
+      "⏳",
+      "Chưa đến lúc!",
       `Vui lòng chờ thêm khoảng **${remainingMinutes} phút** nữa trước khi xem quảng cáo tiếp theo nhé!`,
     );
     return;
   }
 
-  // Kiểm tra xem Adsgram SDK đã sẵn sàng chưa
   if (!adController) {
     showModal(
-      "⚠️ Lỗi kết nối",
+      "⚠️",
+      "Lỗi kết nối",
       "Không thể tải hệ thống quảng cáo Adsgram. Vui lòng thử lại sau!",
     );
     return;
   }
 
   try {
-    // Hiển thị quảng cáo Rewarded Video
+    // Hiển thị quảng cáo Rewarded Video từ Adsgram
     const result = await adController.show();
 
-    // Nếu người dùng xem hết video thành công
+    // Kiểm tra nếu người dùng đã xem hết quảng cáo thành công
     if (result && result.done) {
-      lastAdTime = Date.now();
+      // Thiết lập thời gian chờ 15 phút tiếp theo
+      adsNextAvailableTime = Date.now() + ADS_COOLDOWN_TIME;
 
-      // Cộng 150 ⚡ vào số dư
-      userData.balance += 150;
+      // Cộng thưởng chính xác vào biến balance hiện tại của app
+      balance += 150.0;
+
+      await saveState();
       updateUI();
-      await saveDataToSupabase();
+      updateAdsUI();
 
       showModal(
-        "🎉 Nhận Thưởng Thành Công!",
+        "🎉",
+        "Nhận Thưởng Thành Công!",
         "Bạn đã xem hết quảng cáo và nhận được **+150 ⚡** vào tài khoản.",
       );
+
+      if (tg && tg.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred("success");
+      }
     }
   } catch (err) {
-    // Trường hợp người dùng tắt giữa chừng hoặc lỗi hiển thị
     console.error("Adsgram error:", err);
     showModal(
-      "❌ Chưa hoàn thành",
+      "❌",
+      "Chưa hoàn thành",
       "Bạn cần xem hết video quảng cáo để nhận phần thưởng năng lượng!",
     );
+    if (tg && tg.HapticFeedback) {
+      tg.HapticFeedback.notificationOccurred("error");
+    }
   }
 }
 
@@ -473,7 +491,6 @@ function updateAdsUI() {
     timerBadge.style.display = "none";
   }
 }
-
 /* LOGIC MỜI BẠN BÈ */
 function setupRefLink() {
   const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;

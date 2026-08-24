@@ -46,6 +46,11 @@ const translations = {
     btn_claim_task: "Nhận Coin",
     btn_done: "Đã hoàn thành",
 
+    // Bổ sung dịch thuật Promo Code
+    promo_title: "🎁 Mã Quà Tặng",
+    promo_placeholder: "Nhập mã code của bạn...",
+    promo_btn: "Xác Nhận",
+
     invite_banner_title: "Mời Bạn Bè!",
     invite_banner_desc: "Nhận ngay +200 ⚡ cho mỗi người bạn tham gia!",
     ref_link_label: "LINK GIỚI THIỆU CỦA BẠN",
@@ -85,6 +90,11 @@ const translations = {
     ads_box_name: "Xem Quảng Cáo",
     ads_note_warning: "⚠️ Chú ý: Xem hết video để nhận quà!",
     ads_note_cooldown: "* Có thể nhận lại sau 15 phút",
+
+    promo_title: "Mã Quà Tặng",
+    promo_subtitle: "Nhập mã code để nhận phần thưởng hấp dẫn",
+    promo_placeholder: "NHẬP MÃ CODE...",
+    promo_btn: "Xác Nhận",
   },
   en: {
     balance_label: "BALANCE",
@@ -116,6 +126,11 @@ const translations = {
     btn_do_task: "Start",
     btn_claim_task: "Claim",
     btn_done: "Completed",
+
+    // Bổ sung dịch thuật Promo Code
+    promo_title: "🎁 Promo Code",
+    promo_placeholder: "Enter your promo code...",
+    promo_btn: "Claim",
 
     invite_banner_title: "Invite Friends!",
     invite_banner_desc: "Get +200 ⚡ per friend who joins!",
@@ -156,6 +171,11 @@ const translations = {
     ads_box_name: "Watch Ad",
     ads_note_warning: "⚠️ Note: Watch the full video to get reward!",
     ads_note_cooldown: "* Can be claimed again after 15 minutes",
+
+    promo_title: "Promo Code",
+    promo_subtitle: "Enter code to claim exciting rewards",
+    promo_placeholder: "ENTER CODE...",
+    promo_btn: "Claim",
   },
 };
 
@@ -188,19 +208,18 @@ let taskState = {
   group: "init",
 };
 let lastCheckinTime = 0;
-
 let withdrawHistory = [];
+let usedPromoCodes = []; // Danh sách mã code người dùng đã sử dụng
 
 // KHỞI CHẠY ỨNG DỤNG VÀ TẢI TỪ SUPABASE
 document.addEventListener("DOMContentLoaded", async () => {
   initUserTelegram();
   await fetchUserIP();
 
-  // Tải dữ liệu và kiểm tra trạng thái khóa ngay từ đầu
   const isBanned = await loadStateFromSupabase();
   if (isBanned) {
     showBannedScreen();
-    return; // Dừng, không chạy các hàm khởi tạo tiếp theo nếu đã bị khóa
+    return;
   }
 
   await loadWithdrawHistory();
@@ -291,7 +310,7 @@ async function loadWithdrawHistory() {
   }
 }
 
-// --- HÀM ĐỒNG BỘ DỮ LIỆU VỚI SUPABASE (TRẢ VỀ TRẠNG THÁI BANNED) ---
+// --- HÀM ĐỒNG BỘ DỮ LIỆU VỚI SUPABASE ---
 async function loadStateFromSupabase() {
   try {
     let { data, error } = await supabaseClient
@@ -313,6 +332,7 @@ async function loadStateFromSupabase() {
         ads_next_time: 0,
         ip_address: userIpAddress,
         is_banned: false,
+        used_promo_codes: [],
       };
 
       let insertRes = await supabaseClient.from("users").insert([newUser]);
@@ -328,9 +348,9 @@ async function loadStateFromSupabase() {
       taskState.group = "init";
       adsNextAvailableTime = 0;
       savedTonAddress = "";
-      return false; // Chưa bị ban
+      usedPromoCodes = [];
+      return false;
     } else {
-      // KIỂM TRA TRẠNG THÁI BANNED Ở ĐÂY
       if (data.is_banned === true) {
         return true;
       }
@@ -338,7 +358,6 @@ async function loadStateFromSupabase() {
       balance = parseFloat(data.balance) || 0;
       minerLevel = parseInt(data.miner_level) || 1;
       endTime = data.end_time ? parseInt(data.end_time) : null;
-
       lastCheckinTime = data.last_checkin ? parseInt(data.last_checkin) : 0;
       taskState.channel = data.task_channel || "init";
       taskState.group = data.task_group || "init";
@@ -346,6 +365,7 @@ async function loadStateFromSupabase() {
         ? parseInt(data.ads_next_time)
         : 0;
       savedTonAddress = data.ton_address || "";
+      usedPromoCodes = data.used_promo_codes || [];
 
       if (userIpAddress && data.ip_address !== userIpAddress) {
         await supabaseClient
@@ -376,6 +396,7 @@ async function saveState() {
         ads_next_time: adsNextAvailableTime,
         ip_address: userIpAddress,
         ton_address: savedTonAddress,
+        used_promo_codes: usedPromoCodes,
       })
       .eq("telegram_id", userId);
   } catch (err) {
@@ -406,6 +427,103 @@ function initUserTelegram() {
     }
   } else {
     userId = "12345678";
+  }
+}
+
+/* --- TÍNH NĂNG MỚI: PROMO CODE HỆ THỐNG --- */
+async function claimPromoCode() {
+  const inputEl = document.getElementById("promo-code-input");
+  if (!inputEl) return;
+  const code = inputEl.value.trim().toUpperCase();
+
+  if (!code) {
+    showModal("⚠️", "Mã Trống", "Vui lòng nhập mã promo code hợp lệ!");
+    return;
+  }
+
+  // 1. Kiểm tra xem tài khoản này đã từng dùng mã này chưa (lưu trong mảng cá nhân)
+  if (usedPromoCodes.includes(code)) {
+    showModal(
+      "❌",
+      "Đã Sử Dụng",
+      "Bạn đã nhập mã này rồi, không thể sử dụng lại!",
+    );
+    return;
+  }
+
+  try {
+    // 2. Truy vấn thông tin mã từ bảng 'promo_codes' trên Supabase
+    let { data, error } = await supabaseClient
+      .from("promo_codes")
+      .select("*")
+      .eq("code", code)
+      .single();
+
+    if (error || !data) {
+      showModal(
+        "❌",
+        "Không Tồn Tại",
+        "Mã promo code không tồn tại hoặc đã hết hạn!",
+      );
+      if (tg && tg.HapticFeedback)
+        tg.HapticFeedback.notificationOccurred("error");
+      return;
+    }
+
+    const rewardAmount = parseFloat(data.reward) || 1000;
+    const maxUses = parseInt(data.max_uses) || 10;
+    const currentUsedCount = parseInt(data.used_count) || 0;
+
+    // 3. Kiểm tra xem mã đã hết lượt nhập chưa (đạt giới hạn max_uses)
+    if (currentUsedCount >= maxUses) {
+      showModal(
+        "⚠️",
+        "Hết Lượt Nhập",
+        "Mã quà tặng này đã đạt giới hạn tối đa số lượt sử dụng!",
+      );
+      if (tg && tg.HapticFeedback)
+        tg.HapticFeedback.notificationOccurred("warning");
+      return;
+    }
+
+    // 4. Tăng số lượng đã dùng (used_count) lên 1 trên Supabase
+    let updateRes = await supabaseClient
+      .from("promo_codes")
+      .update({ used_count: currentUsedCount + 1 })
+      .eq("code", code);
+
+    if (updateRes.error) {
+      console.error("Lỗi cập nhật lượt dùng mã:", updateRes.error);
+      showModal(
+        "❌",
+        "Lỗi Hệ Thống",
+        "Không thể xác thực mã lúc này. Vui lòng thử lại sau.",
+      );
+      return;
+    }
+
+    // 5. Cộng phần thưởng coins cho người chơi và lưu lại trạng thái cá nhân
+    balance += rewardAmount;
+    usedPromoCodes.push(code);
+
+    await saveState();
+    updateUI();
+
+    inputEl.value = "";
+    showModal(
+      "🎉",
+      "Thành Công!",
+      `Bạn đã nhận được +${rewardAmount} ⚡ từ mã code ${code}!`,
+    );
+    if (tg && tg.HapticFeedback)
+      tg.HapticFeedback.notificationOccurred("success");
+  } catch (err) {
+    console.error("Lỗi xác thực promo code:", err);
+    showModal(
+      "❌",
+      "Lỗi Hệ Thống",
+      "Không thể kiểm tra mã lúc này. Vui lòng thử lại sau.",
+    );
   }
 }
 

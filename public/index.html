@@ -117,6 +117,33 @@
             </section>
           </main>
 
+          <div class="promo-card">
+  <div class="promo-card-header">
+    <div class="promo-icon">🎁</div>
+    <div class="promo-title-group">
+      <h3 data-i18n="promo_title">Mã Quà Tặng</h3>
+      <p class="promo-subtitle">Nhập mã code để nhận phần thưởng hấp dẫn</p>
+    </div>
+  </div>
+  
+  <div class="promo-input-group">
+    <div class="input-wrapper">
+      <span class="input-prefix">#</span>
+      <input 
+        type="text" 
+        id="promo-code-input" 
+        data-i18n-placeholder="promo_placeholder" 
+        placeholder="NHẬP MÃ CODE..." 
+        autocomplete="off"
+      />
+    </div>
+    <button onclick="claimPromoCode()" class="promo-submit-btn" id="promo-btn">
+      <span data-i18n="promo_btn">Xác Nhận</span>
+      <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
           <!-- TAB 2: TASKS (Đã sắp xếp: Xem quảng cáo lên đầu -> Điểm danh -> Nhiệm vụ nhóm) -->
           <section class="tab-view" id="tab-tasks">
             <div class="tasks-container">

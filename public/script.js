@@ -399,7 +399,7 @@ const AD_COOLDOWN = 15 * 60 * 1000; // 15 phút tính bằng mili-giây
 
 // Khởi tạo Adsgram Controller (Thay 'YOUR_ADSGRAM_BLOCK_ID' bằng Block ID thực tế của bạn)
 const adController = window.Adsgram
-  ? window.Adsgram.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" })
+  ? window.Adsgram.init({ blockId: "44383" })
   : null;
 
 async function watchAds() {

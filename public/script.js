@@ -169,8 +169,8 @@ let endTime = null;
 let currentLang = "vi";
 let userId = "12345678";
 let currentUsername = "TestUser";
-let userIpAddress = ""; // Biến lưu địa chỉ IP của người dùng[cite: 7]
-let savedTonAddress = ""; // Biến lưu địa chỉ ví TON của user
+let userIpAddress = "";
+let savedTonAddress = "";
 
 let timerInterval = null;
 let adsTimerInterval = null;
@@ -188,14 +188,14 @@ let withdrawHistory = [];
 // KHỞI CHẠY ỨNG DỤNG VÀ TẢI TỪ SUPABASE
 document.addEventListener("DOMContentLoaded", async () => {
   initUserTelegram();
-  await fetchUserIP(); // Lấy IP người dùng khi mở ứng dụng[cite: 7]
+  await fetchUserIP();
   await loadStateFromSupabase();
+  await loadWithdrawHistory(); // Tải lịch sử rút tiền từ Supabase
   applyLanguage();
   updateUI();
   updateTaskUI();
   setupRefLink();
   updateWalletUIState();
-  renderWithdrawHistory();
   initAdsSystem();
 });
 
@@ -207,6 +207,39 @@ async function fetchUserIP() {
     userIpAddress = data.ip || "";
   } catch (err) {
     console.warn("Không thể lấy địa chỉ IP:", err);
+  }
+}
+
+// --- HÀM TẢI LỊCH SỬ RÚT TIỀN TỪ SUPABASE ---
+async function loadWithdrawHistory() {
+  try {
+    let { data, error } = await supabaseClient
+      .from("withdrawals")
+      .select("*")
+      .eq("telegram_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("LỖI TẢI LỊCH SỬ RÚT TIỀN:", error);
+      return;
+    }
+
+    if (data) {
+      withdrawHistory = data.map((tx) => ({
+        id: tx.id,
+        amount: tx.amount,
+        tonAmount: tx.ton_amount,
+        address: tx.address,
+        status: tx.status,
+        createdAt: new Date(tx.created_at).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      }));
+      renderWithdrawHistory();
+    }
+  } catch (err) {
+    console.error("Lỗi ngoại lệ tải lịch sử:", err);
   }
 }
 
@@ -234,7 +267,7 @@ async function loadStateFromSupabase() {
         task_channel: "init",
         task_group: "init",
         ads_next_time: 0,
-        ip_address: userIpAddress, // Lưu IP khi tạo mới[cite: 7]
+        ip_address: userIpAddress,
       };
 
       let insertRes = await supabaseClient.from("users").insert([newUser]);
@@ -263,7 +296,6 @@ async function loadStateFromSupabase() {
         : 0;
       savedTonAddress = data.ton_address || "";
 
-      // Cập nhật lại IP nếu user thay đổi mạng hoặc IP mới
       if (userIpAddress && data.ip_address !== userIpAddress) {
         await supabaseClient
           .from("users")
@@ -271,7 +303,6 @@ async function loadStateFromSupabase() {
           .eq("telegram_id", userId);
       }
 
-      // Kiểm tra khóa 24h điểm danh
       const now = Date.now();
       const cooldown24h = 24 * 60 * 60 * 1000;
       if (lastCheckinTime > 0 && now - lastCheckinTime < cooldown24h) {
@@ -298,7 +329,7 @@ async function saveState() {
         task_channel: taskState.channel,
         task_group: taskState.group,
         ads_next_time: adsNextAvailableTime,
-        ip_address: userIpAddress, // Cập nhật đồng bộ IP khi lưu dữ liệu[cite: 7]
+        ip_address: userIpAddress,
         ton_address: savedTonAddress,
       })
       .eq("telegram_id", userId);
@@ -777,7 +808,8 @@ function updateTonEstimate() {
   calcText.innerText = `≈ ${estimatedTon.toFixed(4)} TON`;
 }
 
-function submitWithdrawRequest() {
+// --- HÀM GỬI YÊU CẦU RÚT TIỀN LÊN SUPABASE ---
+async function submitWithdrawRequest() {
   const amountInput = document.getElementById("withdraw-amount");
   if (!amountInput) return;
 
@@ -817,27 +849,36 @@ function submitWithdrawRequest() {
     return;
   }
 
-  balance -= amount;
-
+  // 1. Đẩy lệnh rút tiền lên bảng "withdrawals" trên Supabase
   const newTx = {
-    id: "TX" + Date.now(),
+    telegram_id: userId,
     amount: amount,
-    tonAmount: (amount * TON_RATE).toFixed(4),
+    ton_amount: parseFloat((amount * TON_RATE).toFixed(4)),
     address: address,
     status: "pending",
-    createdAt: new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
   };
 
-  withdrawHistory.unshift(newTx);
-  saveState();
+  const { error } = await supabaseClient.from("withdrawals").insert([newTx]);
 
+  if (error) {
+    console.error("Lỗi khi lưu lịch sử rút tiền lên Supabase:", error);
+    showModal(
+      "❌",
+      "Lỗi Server",
+      "Không thể gửi yêu cầu rút tiền. Vui lòng thử lại sau.",
+    );
+    return;
+  }
+
+  // 2. Trừ tiền và cập nhật trạng thái mới của user lên bảng "users"
+  balance -= amount;
+  await saveState();
+
+  // 3. Reset ô nhập và tải lại lịch sử từ Supabase
   amountInput.value = "";
   updateTonEstimate();
   updateUI();
-  renderWithdrawHistory();
+  await loadWithdrawHistory();
 
   showModal(
     "⏳",

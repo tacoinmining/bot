@@ -169,7 +169,8 @@ let endTime = null;
 let currentLang = "vi";
 let userId = "12345678";
 let currentUsername = "TestUser";
-let userIpAddress = ""; // Biến lưu địa chỉ IP của người dùng
+let userIpAddress = ""; // Biến lưu địa chỉ IP của người dùng[cite: 7]
+let savedTonAddress = ""; // Biến lưu địa chỉ ví TON của user
 
 let timerInterval = null;
 let adsTimerInterval = null;
@@ -193,6 +194,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateUI();
   updateTaskUI();
   setupRefLink();
+  updateWalletUIState();
   renderWithdrawHistory();
   initAdsSystem();
 });
@@ -247,6 +249,7 @@ async function loadStateFromSupabase() {
       taskState.channel = "init";
       taskState.group = "init";
       adsNextAvailableTime = 0;
+      savedTonAddress = "";
     } else {
       balance = parseFloat(data.balance) || 0;
       minerLevel = parseInt(data.miner_level) || 1;
@@ -258,6 +261,7 @@ async function loadStateFromSupabase() {
       adsNextAvailableTime = data.ads_next_time
         ? parseInt(data.ads_next_time)
         : 0;
+      savedTonAddress = data.ton_address || "";
 
       // Cập nhật lại IP nếu user thay đổi mạng hoặc IP mới
       if (userIpAddress && data.ip_address !== userIpAddress) {
@@ -295,6 +299,7 @@ async function saveState() {
         task_group: taskState.group,
         ads_next_time: adsNextAvailableTime,
         ip_address: userIpAddress, // Cập nhật đồng bộ IP khi lưu dữ liệu[cite: 7]
+        ton_address: savedTonAddress,
       })
       .eq("telegram_id", userId);
   } catch (err) {
@@ -712,7 +717,57 @@ function switchTab(tabName, clickedBtn) {
   if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
 }
 
-/* RÚT TIỀN (WALLET) */
+/* QUẢN LÝ VÍ TON & RÚT TIỀN (WALLET) */
+function saveWalletAddress() {
+  const addressInput = document.getElementById("withdraw-address");
+  if (!addressInput) return;
+  const address = addressInput.value.trim();
+
+  if (!address || address.length < 10) {
+    showModal(
+      "❌",
+      translations[currentLang].alert_err_address_title,
+      translations[currentLang].alert_err_address_desc,
+    );
+    if (tg && tg.HapticFeedback)
+      tg.HapticFeedback.notificationOccurred("error");
+    return;
+  }
+
+  savedTonAddress = address;
+  updateWalletUIState();
+  saveState();
+
+  if (tg && tg.HapticFeedback)
+    tg.HapticFeedback.notificationOccurred("success");
+}
+
+function editWalletAddress() {
+  savedTonAddress = "";
+  updateWalletUIState();
+  saveState();
+  if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
+}
+
+function updateWalletUIState() {
+  const inputContainer = document.getElementById("wallet-input-container");
+  const savedBox = document.getElementById("wallet-saved-box");
+  const savedDisplay = document.getElementById("saved-address-display");
+  const addressInput = document.getElementById("withdraw-address");
+
+  if (!inputContainer || !savedBox || !savedDisplay) return;
+
+  if (savedTonAddress) {
+    inputContainer.style.display = "none";
+    savedBox.style.display = "flex";
+    savedDisplay.innerText = savedTonAddress;
+  } else {
+    inputContainer.style.display = "flex";
+    savedBox.style.display = "none";
+    if (addressInput) addressInput.value = "";
+  }
+}
+
 function updateTonEstimate() {
   const amountInput = document.getElementById("withdraw-amount");
   const calcText = document.getElementById("calc-ton-text");
@@ -723,18 +778,17 @@ function updateTonEstimate() {
 }
 
 function submitWithdrawRequest() {
-  const addressInput = document.getElementById("withdraw-address");
   const amountInput = document.getElementById("withdraw-amount");
-  if (!addressInput || !amountInput) return;
+  if (!amountInput) return;
 
-  const address = addressInput.value.trim();
+  const address = savedTonAddress;
   const amount = parseFloat(amountInput.value);
 
   if (!address || address.length < 10) {
     showModal(
       "❌",
       translations[currentLang].alert_err_address_title,
-      translations[currentLang].alert_err_address_desc,
+      "Vui lòng nhập và lưu địa chỉ ví TON trước khi rút!",
     );
     if (tg && tg.HapticFeedback)
       tg.HapticFeedback.notificationOccurred("error");
@@ -780,7 +834,6 @@ function submitWithdrawRequest() {
   withdrawHistory.unshift(newTx);
   saveState();
 
-  addressInput.value = "";
   amountInput.value = "";
   updateTonEstimate();
   updateUI();

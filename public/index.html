@@ -280,68 +280,67 @@
           </section>
 
           <!-- TAB 4: WALLET -->
-          <section class="tab-view" id="tab-wallet">
-            <div class="wallet-container">
-              <div class="withdraw-card">
-                <div class="withdraw-header">
-                  <h3 class="tab-title" data-i18n="wallet_title">
-                    Ví Web3 & Rút Coin
-                  </h3>
-                  <p class="rate-info">💎 1,000,000 ⚡ = 1 TON</p>
-                </div>
+<section class="tab-view" id="tab-wallet">
+  <div class="wallet-container">
+    <div class="withdraw-card">
+      <div class="withdraw-header">
+        <h3 class="tab-title" data-i18n="wallet_title">Ví Web3 & Rút Coin</h3>
+        <p class="rate-info">💎 1,000,000 ⚡ = 1 TON</p>
+      </div>
 
-                <div class="withdraw-form">
-                  <div class="input-group">
-                    <label class="input-label" data-i18n="wallet_label_address"
-                      >Địa chỉ ví TON</label
-                    >
-                    <input
-                      type="text"
-                      id="withdraw-address"
-                      data-i18n-placeholder="wallet_placeholder_address"
-                      placeholder="Nhập địa chỉ ví (ví dụ: EQD...)"
-                    />
-                  </div>
-
-                  <div class="input-group">
-                    <div class="input-label-row">
-                      <label class="input-label" data-i18n="wallet_label_amount"
-                        >Số lượng ⚡ muốn rút</label
-                      >
-                      <span class="calc-ton" id="calc-ton-text"
-                        >≈ 0.0000 TON</span
-                      >
-                    </div>
-                    <input
-                      type="number"
-                      id="withdraw-amount"
-                      data-i18n-placeholder="wallet_placeholder_amount"
-                      placeholder="Nhập số coin (Tối thiểu 10,000 ⚡)"
-                      oninput="updateTonEstimate()"
-                    />
-                  </div>
-
-                  <button
-                    class="withdraw-btn"
-                    id="withdraw-submit-btn"
-                    onclick="submitWithdrawRequest()"
-                  >
-                    <span data-i18n="wallet_btn_submit"
-                      >🚀 GỬI YÊU CẦU RÚT COIN</span
-                    >
-                  </button>
-                </div>
-              </div>
-
-              <div class="history-card">
-                <div class="history-header" data-i18n="wallet_history_title">
-                  📜 Lịch Sử Rút Tiền
-                </div>
-                <div class="history-list" id="history-list"></div>
-              </div>
-            </div>
-          </section>
+      <div class="withdraw-form">
+        <!-- Khu vực quản lý Địa chỉ Ví TON -->
+        <div class="input-group">
+          <label class="input-label" data-i18n="wallet_label_address">Địa chỉ ví TON</label>
+          <div class="wallet-input-row" id="wallet-input-container">
+            <input
+              type="text"
+              id="withdraw-address"
+              data-i18n-placeholder="wallet_placeholder_address"
+              placeholder="Nhập địa chỉ ví (ví dụ: EQD...)"
+            />
+            <button class="wallet-action-btn" id="save-wallet-btn" onclick="saveWalletAddress()">Lưu Ví</button>
+          </div>
+          <!-- Hiển thị khi đã lưu ví -->
+          <div class="wallet-saved-box" id="wallet-saved-box" style="display: none;">
+            <span class="saved-address-text" id="saved-address-display">EQD...</span>
+            <button class="wallet-action-btn change-btn" onclick="editWalletAddress()">Đổi ví</button>
+          </div>
         </div>
+
+        <!-- Nhập số lượng rút -->
+        <div class="input-group">
+          <div class="input-label-row">
+            <label class="input-label" data-i18n="wallet_label_amount">Số lượng ⚡ muốn rút</label>
+            <span class="calc-ton" id="calc-ton-text">≈ 0.0000 TON</span>
+          </div>
+          <input
+            type="number"
+            id="withdraw-amount"
+            data-i18n-placeholder="wallet_placeholder_amount"
+            placeholder="Nhập số coin (Tối thiểu 10,000 ⚡)"
+            oninput="updateTonEstimate()"
+          />
+        </div>
+
+        <button
+          class="withdraw-btn"
+          id="withdraw-submit-btn"
+          onclick="submitWithdrawRequest()"
+        >
+          <span data-i18n="wallet_btn_submit">🚀 GỬI YÊU CẦU RÚT COIN</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="history-card">
+      <div class="history-header" data-i18n="wallet_history_title">
+        📜 Lịch Sử Rút Tiền
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+  </div>
+</section>
 
         <!-- Navigation Bar -->
         <nav class="bottom-nav">

@@ -1,7 +1,6 @@
-// --- CẤU HÌNH KẾT NỐI SUPABASE ---
-const SUPABASE_URL = "https://miasllplfprvtjxfgs.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pYXNtbGxwbGZwcnZ0anhmc2gsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzg3NTU5MDg5LCJleHAiOjIxMDMxMzUwODl9.IUuZ7PckUs_eYibFyrZ0kbOvjUmvlpjGZRpyej5-mq8";
+// --- CẤU HÌNH KẾT NỐI SUPABASE & TELEGRAM ---
+const SUPABASE_URL = "https://miasmllplfprvtjxfsgs.supabase.co";
+const SUPABASE_ANON_KEY = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pYXNtbGxwbGZwcnZ0anhmc2dzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTkwODksImV4cCI6MjEwMzEzNTA4OX0.IUuZ7PckUs_eYibFyrZ0kbOvjUmvlpjGZRpyej5-mq8`;
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -9,7 +8,6 @@ const tg = window.Telegram?.WebApp;
 if (tg) tg.expand();
 
 const BOT_USERNAME = "tacoinmining_bot";
-
 // HỆ THỐNG ĐA NGÔN NGỮ (VI / EN)
 const translations = {
   vi: {

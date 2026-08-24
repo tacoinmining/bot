@@ -47,7 +47,7 @@ const translations = {
     btn_done: "Đã hoàn thành",
 
     invite_banner_title: "Mời Bạn Bè!",
-    invite_banner_desc: "Nhận ngay +100 ⚡ cho mỗi người bạn tham gia!",
+    invite_banner_desc: "Nhận ngay +200 ⚡ cho mỗi người bạn tham gia!",
     ref_link_label: "LINK GIỚI THIỆU CỦA BẠN",
     btn_copy: "Copy",
     btn_copied: "Đã Copy!",
@@ -118,7 +118,7 @@ const translations = {
     btn_done: "Completed",
 
     invite_banner_title: "Invite Friends!",
-    invite_banner_desc: "Get +100 ⚡ per friend who joins!",
+    invite_banner_desc: "Get +200 ⚡ per friend who joins!",
     ref_link_label: "YOUR REFERRAL LINK",
     btn_copy: "Copy",
     btn_copied: "Copied!",
@@ -161,7 +161,7 @@ const translations = {
 
 // THÔNG SỐ CẤU HÌNH
 const MINING_DURATION = 6 * 60 * 60 * 1000;
-const UPGRADE_COST = 400.0;
+const UPGRADE_COST = 3000.0;
 const BASE_HOURLY_RATE = 40.0;
 const RATE_INCREASE_PER_LEVEL = 1.0;
 const TON_RATE = 0.000001;
@@ -195,14 +195,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   initUserTelegram();
   await fetchUserIP();
   await loadStateFromSupabase();
-  await loadWithdrawHistory(); // Tải lịch sử rút tiền từ Supabase[cite: 12]
+  await loadWithdrawHistory();
   applyLanguage();
   updateUI();
   updateTaskUI();
   setupRefLink();
   updateWalletUIState();
   initAdsSystem();
-  initSupabaseRealtime(); // Lắng nghe thay đổi trạng thái duyệt đơn tự động
+  initSupabaseRealtime();
 });
 
 // --- LẮNG NGHE THAY ĐỔI TRẠNG THÁI REALTIME TỪ SUPABASE ---
@@ -219,7 +219,7 @@ function initSupabaseRealtime() {
       },
       (payload) => {
         console.log("Đơn rút tiền thay đổi trạng thái:", payload.new);
-        loadWithdrawHistory(); // Tải lại lịch sử ngay khi Admin bấm nút duyệt/từ chối
+        loadWithdrawHistory();
       },
     )
     .subscribe();
@@ -279,14 +279,10 @@ async function loadStateFromSupabase() {
       .single();
 
     if (error || !data) {
-      console.log(
-        "Không tìm thấy user trên Supabase, đang tiến hành tạo mới cho ID:",
-        userId,
-      );
       const newUser = {
         telegram_id: userId,
         username: currentUsername,
-        balance: 1000.0,
+        balance: 0.0,
         miner_level: 1,
         end_time: 0,
         last_checkin: 0,
@@ -301,7 +297,7 @@ async function loadStateFromSupabase() {
         console.error("LỖI INSERT SUPABASE:", insertRes.error);
       }
 
-      balance = 1000.0;
+      balance = 0.0;
       minerLevel = 1;
       endTime = null;
       lastCheckinTime = 0;
@@ -387,10 +383,6 @@ function initUserTelegram() {
     }
   } else {
     userId = "12345678";
-    console.warn(
-      "Không tìm thấy môi trường Telegram, đang dùng userId giả lập:",
-      userId,
-    );
   }
 }
 
@@ -477,7 +469,7 @@ function copyRefLink() {
 function shareRefLink() {
   const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
   const shareText =
-    "🚀 Tham gia ngay để nhận 100 ⚡ và đào $TA Token miễn phí!";
+    "🚀 Tham gia ngay để nhận 200 ⚡ và đào $TA Token miễn phí!";
   const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`;
 
   if (tg && tg.openTelegramLink) tg.openTelegramLink(fullUrl);
@@ -512,7 +504,7 @@ function closeModal() {
   if (modalEl) modalEl.classList.remove("active");
 }
 
-/* NHIỆM VỤ ĐIỂM DANH & TELEGRAM */
+/* NHIỆM VỤ ĐIỂM DANH & TELEGRAM (ĐÃ CẬP NHẬT MỨC THƯỞNG MỚI) */
 function claimDailyReward() {
   const now = Date.now();
   const cooldown24h = 24 * 60 * 60 * 1000;
@@ -523,7 +515,7 @@ function claimDailyReward() {
 
   taskState.daily = true;
   lastCheckinTime = now;
-  balance += 10.0;
+  balance += 100.0; // Đã đổi từ 50 hoặc 10 lên 100 ⚡
 
   saveState();
   updateUI();
@@ -532,7 +524,7 @@ function claimDailyReward() {
   showModal(
     "📅",
     translations[currentLang].modal_task_title,
-    `${translations[currentLang].modal_task_desc} +10 ⚡!`,
+    `${translations[currentLang].modal_task_desc} +100 ⚡!`,
   );
   if (tg && tg.HapticFeedback)
     tg.HapticFeedback.notificationOccurred("success");
@@ -556,7 +548,7 @@ function processTask(taskId, url) {
       btn.style.opacity = "1";
     }, 3000);
   } else if (taskState[taskId] === "waiting") {
-    const reward = 50.0;
+    const reward = 500.0; // Đã đổi thành 500 ⚡ cho mỗi nhiệm vụ join nhóm
     balance += reward;
     taskState[taskId] = "claimed";
 
@@ -834,7 +826,6 @@ function updateTonEstimate() {
   calcText.innerText = `≈ ${estimatedTon.toFixed(4)} TON`;
 }
 
-// --- HÀM CHE BỚT ĐỊA CHỈ VÍ TON ---
 function maskWalletAddress(wallet) {
   if (!wallet || wallet.length <= 8) return "***";
   const start = wallet.slice(0, 4);
@@ -842,7 +833,6 @@ function maskWalletAddress(wallet) {
   return `${start}...${end}`;
 }
 
-// --- HÀM GỬI 2 THÔNG BÁO VỀ TELEGRAM CHO ADMIN ---
 async function sendTelegramAdminNotification(
   withdrawalId,
   username,
@@ -855,7 +845,6 @@ async function sendTelegramAdminNotification(
   const url = `https://api.telegram.org/bot${ADMIN_BOT_TOKEN}/sendMessage`;
   const maskedWallet = maskWalletAddress(address);
 
-  // 1. Tin nhắn thứ nhất: Định dạng thông báo chuẩn kèm nút Duyệt / Từ chối
   const message1 =
     `🚨 <b>CÓ YÊU CẦU RÚT TIỀN MỚI!</b>\n\n` +
     `👤 <b>User:</b> ${username}\n` +
@@ -873,7 +862,6 @@ async function sendTelegramAdminNotification(
     ],
   };
 
-  // 2. Tin nhắn thứ hai: Thông báo chuyển tiền thành công với ví bị che khuất
   const message2 =
     `✅ <b>CHUYỂN TIỀN THÀNH CÔNG!</b>\n\n` +
     `👤 <b>User:</b> ${username}\n` +
@@ -881,7 +869,6 @@ async function sendTelegramAdminNotification(
     `👛 <b>Ví TON:</b> <code>${maskedWallet}</code>`;
 
   try {
-    // Gửi tin nhắn 1 (Kèm nút bấm inline)
     await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -893,7 +880,6 @@ async function sendTelegramAdminNotification(
       }),
     });
 
-    // Gửi tin nhắn 2 (Thông báo chuyển tiền thành công, che ví)
     await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -908,7 +894,6 @@ async function sendTelegramAdminNotification(
   }
 }
 
-// --- HÀM GỬI YÊU CẦU RÚT TIỀN LÊN SUPABASE & BẮN THÔNG BÁO ---
 async function submitWithdrawRequest() {
   const amountInput = document.getElementById("withdraw-amount");
   if (!amountInput) return;
@@ -951,7 +936,6 @@ async function submitWithdrawRequest() {
 
   const tonAmountCalc = parseFloat((amount * TON_RATE).toFixed(4));
 
-  // 1. Đẩy lệnh rút tiền lên bảng "withdrawals" trên Supabase và lấy về ID dòng vừa tạo
   const newTx = {
     telegram_id: userId,
     amount: amount,
@@ -977,7 +961,6 @@ async function submitWithdrawRequest() {
 
   const insertedId = data[0].id;
 
-  // 2. 🚀 GỬI 2 TIN NHẮN THÔNG BÁO VỀ TELEGRAM CHO ADMIN
   await sendTelegramAdminNotification(
     insertedId,
     currentUsername,
@@ -986,11 +969,9 @@ async function submitWithdrawRequest() {
     address,
   );
 
-  // 3. Trừ tiền và cập nhật trạng thái mới của user lên bảng "users"
   balance -= amount;
   await saveState();
 
-  // 4. Reset ô nhập và tải lại lịch sử từ Supabase
   amountInput.value = "";
   updateTonEstimate();
   updateUI();

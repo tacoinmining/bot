@@ -17,7 +17,7 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  overflow: hidden; /* Khóa cuộn toàn trang */
+  overflow: hidden;
 }
 
 /* ==========================================
@@ -67,7 +67,7 @@ body {
   z-index: 2;
   background: #080313;
   border-radius: 26px;
-  overflow: hidden; /* Đảm bảo không bị lòi khung cuộn ra ngoài app */
+  overflow: hidden;
 }
 
 /* ==========================================
@@ -79,13 +79,12 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-y: auto; /* Chỉ phần này được phép cuộn */
+  overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: 90px; /* Chừa khoảng trống an toàn để không bị thanh menu che nội dung cuối */
+  padding-bottom: 90px;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Ẩn thanh cuộn mặc định nhưng vẫn vuốt/cuộn bình thường */
 .tab-content-wrapper::-webkit-scrollbar {
   width: 0px;
   background: transparent;
@@ -115,7 +114,7 @@ body {
 }
 
 /* ==========================================
-   4. NAVIGATION BAR (Cố định ở đáy)
+   4. NAVIGATION BAR
    ========================================== */
 .bottom-nav {
   position: absolute;
@@ -129,7 +128,7 @@ body {
   display: flex;
   justify-content: space-around;
   padding: 10px 0;
-  z-index: 1000; /* Đảm bảo luôn nổi lên trên các thành phần khác */
+  z-index: 1000;
 }
 
 .nav-item {
@@ -1397,7 +1396,6 @@ body {
 .btn-arrow {
   transition: transform 0.2s ease;
 }
-
 .promo-submit-btn:hover .btn-arrow {
   transform: translateX(3px);
 }

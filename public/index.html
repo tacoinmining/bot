@@ -7,17 +7,13 @@
       content="width=device-width, initial-scale=1.0, user-scalable=no"
     />
     <title>TA Network - Cyberpunk Mining</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <link rel="stylesheet" href="style.css" />
-    <!-- Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- Telegram Web App API -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Adsgram SDK Script -->
-  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <!-- External SDKs -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="phone-frame">
@@ -115,37 +111,58 @@
                 </button>
               </div>
             </section>
+
+            <!-- Promo Code Card -->
             <div class="promo-card">
-  <div class="promo-card-header">
-    <div class="promo-icon">🎁</div>
-    <div class="promo-title-group">
-      <h3 data-i18n="promo_title">Mã Quà Tặng</h3>
-      <p class="promo-subtitle">Nhập mã code để nhận phần thưởng hấp dẫn</p>
-    </div>
-  </div>
-  
-  <div class="promo-input-group">
-    <div class="input-wrapper">
-      <span class="input-prefix">#</span>
-      <input 
-        type="text" 
-        id="promo-code-input" 
-        data-i18n-placeholder="promo_placeholder" 
-        placeholder="NHẬP MÃ CODE..." 
-        autocomplete="off"
-      />
-    </div>
-    <button onclick="claimPromoCode()" class="promo-submit-btn" id="promo-btn">
-      <span data-i18n="promo_btn">Xác Nhận</span>
-      <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    </button>
-  </div>
-</div>
+              <div class="promo-card-header">
+                <div class="promo-icon">🎁</div>
+                <div class="promo-title-group">
+                  <h3 data-i18n="promo_title">Mã Quà Tặng</h3>
+                  <p class="promo-subtitle" data-i18n="promo_subtitle">
+                    Nhập mã code để nhận phần thưởng hấp dẫn
+                  </p>
+                </div>
+              </div>
+
+              <div class="promo-input-group">
+                <div class="input-wrapper">
+                  <span class="input-prefix">#</span>
+                  <input
+                    type="text"
+                    id="promo-code-input"
+                    data-i18n-placeholder="promo_placeholder"
+                    placeholder="NHẬP MÃ CODE..."
+                    autocomplete="off"
+                  />
+                </div>
+                <button
+                  onclick="claimPromoCode()"
+                  class="promo-submit-btn"
+                  id="promo-btn"
+                >
+                  <span data-i18n="promo_btn">Xác Nhận</span>
+                  <svg
+                    class="btn-arrow"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </main>
-          <!-- TAB 2: TASKS (Đã sắp xếp: Xem quảng cáo lên đầu -> Điểm danh -> Nhiệm vụ nhóm) -->
+
+          <!-- TAB 2: TASKS -->
           <section class="tab-view" id="tab-tasks">
             <div class="tasks-container">
-              <!-- 1. CARD XEM QUẢNG CÁO (Đứng đầu tiên) -->
+              <!-- 1. Xem quảng cáo -->
               <div class="ads-card">
                 <div class="ads-card-header">
                   <span class="ads-card-title" data-i18n="ads_card_title"
@@ -180,7 +197,7 @@
                 </div>
               </div>
 
-              <!-- 2. ĐIỂM DANH HẰNG NGÀY (Đứng thứ hai) -->
+              <!-- 2. Điểm danh hằng ngày -->
               <div class="daily-card">
                 <div class="daily-info">
                   <div class="daily-icon">📅</div>
@@ -201,13 +218,12 @@
                 </button>
               </div>
 
-              <!-- 3. NHIỆM VỤ TELEGRAM (Đứng cuối) -->
+              <!-- 3. Nhiệm vụ Telegram -->
               <div class="task-section-group">
                 <div class="tasks-header" data-i18n="social_tasks_title">
                   Nhiệm Vụ Telegram
                 </div>
                 <div class="task-list">
-                  <!-- Kênh Telegram -->
                   <div class="task-item">
                     <div class="task-info">
                       <div class="task-icon">📢</div>
@@ -230,7 +246,6 @@
                     </button>
                   </div>
 
-                  <!-- Nhóm Chat Telegram -->
                   <div class="task-item">
                     <div class="task-info">
                       <div class="task-icon">💬</div>
@@ -313,67 +328,94 @@
           </section>
 
           <!-- TAB 4: WALLET -->
-<section class="tab-view" id="tab-wallet">
-  <div class="wallet-container">
-    <div class="withdraw-card">
-      <div class="withdraw-header">
-        <h3 class="tab-title" data-i18n="wallet_title">Ví Web3 & Rút Coin</h3>
-        <p class="rate-info">💎 1,000,000 ⚡ = 1 TON</p>
-      </div>
+          <section class="tab-view" id="tab-wallet">
+            <div class="wallet-container">
+              <div class="withdraw-card">
+                <div class="withdraw-header">
+                  <h3 class="tab-title" data-i18n="wallet_title">
+                    Ví Web3 & Rút Coin
+                  </h3>
+                  <p class="rate-info">💎 1,000,000 ⚡ = 1 TON</p>
+                </div>
 
-      <div class="withdraw-form">
-        <!-- Khu vực quản lý Địa chỉ Ví TON -->
-        <div class="input-group">
-          <label class="input-label" data-i18n="wallet_label_address">Địa chỉ ví TON</label>
-          <div class="wallet-input-row" id="wallet-input-container">
-            <input
-              type="text"
-              id="withdraw-address"
-              data-i18n-placeholder="wallet_placeholder_address"
-              placeholder="Nhập địa chỉ ví (ví dụ: EQD...)"
-            />
-            <button class="wallet-action-btn" id="save-wallet-btn" onclick="saveWalletAddress()">Lưu Ví</button>
-          </div>
-          <!-- Hiển thị khi đã lưu ví -->
-          <div class="wallet-saved-box" id="wallet-saved-box" style="display: none;">
-            <span class="saved-address-text" id="saved-address-display">EQD...</span>
-            <button class="wallet-action-btn change-btn" onclick="editWalletAddress()">Đổi ví</button>
-          </div>
+                <div class="withdraw-form">
+                  <div class="input-group">
+                    <label class="input-label" data-i18n="wallet_label_address"
+                      >Địa chỉ ví TON</label
+                    >
+                    <div class="wallet-input-row" id="wallet-input-container">
+                      <input
+                        type="text"
+                        id="withdraw-address"
+                        data-i18n-placeholder="wallet_placeholder_address"
+                        placeholder="Nhập địa chỉ ví (ví dụ: EQD...)"
+                      />
+                      <button
+                        class="wallet-action-btn"
+                        id="save-wallet-btn"
+                        onclick="saveWalletAddress()"
+                      >
+                        Lưu Ví
+                      </button>
+                    </div>
+                    <div
+                      class="wallet-saved-box"
+                      id="wallet-saved-box"
+                      style="display: none"
+                    >
+                      <span
+                        class="saved-address-text"
+                        id="saved-address-display"
+                        >EQD...</span
+                      >
+                      <button
+                        class="wallet-action-btn change-btn"
+                        onclick="editWalletAddress()"
+                      >
+                        Đổi ví
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="input-group">
+                    <div class="input-label-row">
+                      <label class="input-label" data-i18n="wallet_label_amount"
+                        >Số lượng ⚡ muốn rút</label
+                      >
+                      <span class="calc-ton" id="calc-ton-text"
+                        >≈ 0.0000 TON</span
+                      >
+                    </div>
+                    <input
+                      type="number"
+                      id="withdraw-amount"
+                      data-i18n-placeholder="wallet_placeholder_amount"
+                      placeholder="Nhập số coin (Tối thiểu 10,000 ⚡)"
+                      oninput="updateTonEstimate()"
+                    />
+                  </div>
+
+                  <button
+                    class="withdraw-btn"
+                    id="withdraw-submit-btn"
+                    onclick="submitWithdrawRequest()"
+                  >
+                    <span data-i18n="wallet_btn_submit"
+                      >🚀 GỬI YÊU CẦU RÚT COIN</span
+                    >
+                  </button>
+                </div>
+              </div>
+
+              <div class="history-card">
+                <div class="history-header" data-i18n="wallet_history_title">
+                  📜 Lịch Sử Rút Tiền
+                </div>
+                <div class="history-list" id="history-list"></div>
+              </div>
+            </div>
+          </section>
         </div>
-
-        <!-- Nhập số lượng rút -->
-        <div class="input-group">
-          <div class="input-label-row">
-            <label class="input-label" data-i18n="wallet_label_amount">Số lượng ⚡ muốn rút</label>
-            <span class="calc-ton" id="calc-ton-text">≈ 0.0000 TON</span>
-          </div>
-          <input
-            type="number"
-            id="withdraw-amount"
-            data-i18n-placeholder="wallet_placeholder_amount"
-            placeholder="Nhập số coin (Tối thiểu 10,000 ⚡)"
-            oninput="updateTonEstimate()"
-          />
-        </div>
-
-        <button
-          class="withdraw-btn"
-          id="withdraw-submit-btn"
-          onclick="submitWithdrawRequest()"
-        >
-          <span data-i18n="wallet_btn_submit">🚀 GỬI YÊU CẦU RÚT COIN</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="history-card">
-      <div class="history-header" data-i18n="wallet_history_title">
-        📜 Lịch Sử Rút Tiền
-      </div>
-      <div class="history-list" id="history-list"></div>
-    </div>
-  </div>
-</section>
 
         <!-- Navigation Bar -->
         <nav class="bottom-nav">

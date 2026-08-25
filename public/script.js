@@ -1,6 +1,7 @@
 // --- CẤU HÌNH KẾT NỐI SUPABASE & TELEGRAM ---
 const SUPABASE_URL = "https://miasmllplfprvtjxfsgs.supabase.co";
-const SUPABASE_ANON_KEY = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pYXNtbGxwbGZwcnZ0anhmc2dzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTkwODksImV4cCI6MjEwMzEzNTA4OX0.IUuZ7PckUs_eYibFyrZ0kbOvjUmvlpjGZRpyej5-mq8`;
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pYXNtbGxwbGZwcnZ0anhmc2dzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTkwODksImV4cCI6MjEwMzEzNTA4OX0.IUuZ7PckUs_eYibFyrZ0kbOvjUmvlpjGZRpyej5-mq8";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -47,7 +48,8 @@ const translations = {
     btn_done: "Đã hoàn thành",
 
     promo_title: "🎁 Mã Quà Tặng",
-    promo_placeholder: "Nhập mã code của bạn...",
+    promo_subtitle: "Nhập mã code để nhận phần thưởng hấp dẫn",
+    promo_placeholder: "NHẬP MÃ CODE...",
     promo_btn: "Xác Nhận",
 
     invite_banner_title: "Mời Bạn Bè!",
@@ -56,6 +58,9 @@ const translations = {
     btn_copy: "Copy",
     btn_copied: "Đã Copy!",
     btn_invite_friend: "Mời Bạn Bè Trên Telegram",
+    frends_list_title: "Danh Sách Bạn Bè",
+    unit_friends: "Bạn",
+    empty_frends: "Chưa có ai tham gia. Hãy gửi link để mời bạn bè ngay!",
 
     modal_start_title: "Khởi Động Thành Công! 🚀",
     modal_start_desc:
@@ -89,9 +94,6 @@ const translations = {
     ads_box_name: "Xem Quảng Cáo",
     ads_note_warning: "⚠️ Chú ý: Xem hết video để nhận quà!",
     ads_note_cooldown: "* Có thể nhận lại sau 15 phút",
-
-    promo_subtitle: "Nhập mã code để nhận phần thưởng hấp dẫn",
-    promo_placeholder: "NHẬP MÃ CODE...",
   },
   en: {
     balance_label: "BALANCE",
@@ -125,7 +127,8 @@ const translations = {
     btn_done: "Completed",
 
     promo_title: "🎁 Promo Code",
-    promo_placeholder: "Enter your promo code...",
+    promo_subtitle: "Enter code to claim exciting rewards",
+    promo_placeholder: "ENTER CODE...",
     promo_btn: "Claim",
 
     invite_banner_title: "Invite Friends!",
@@ -134,6 +137,9 @@ const translations = {
     btn_copy: "Copy",
     btn_copied: "Copied!",
     btn_invite_friend: "Invite Friends via Telegram",
+    frends_list_title: "Friends List",
+    unit_friends: "Friends",
+    empty_frends: "No one has joined yet. Send the link to invite friends now!",
 
     modal_start_title: "Started Successfully! 🚀",
     modal_start_desc:
@@ -167,9 +173,6 @@ const translations = {
     ads_box_name: "Watch Ad",
     ads_note_warning: "⚠️ Note: Watch the full video to get reward!",
     ads_note_cooldown: "* Can be claimed again after 15 minutes",
-
-    promo_subtitle: "Enter code to claim exciting rewards",
-    promo_placeholder: "ENTER CODE...",
   },
 };
 
@@ -240,7 +243,7 @@ function showBannedScreen() {
   }
 }
 
-// --- LẮNG NGHE THAY ĐỔI TRẠNG THÁI REALTIME TỪ SUPABASE ---
+// --- LẮNG NGHE REALTIME TỪ SUPABASE ---
 function initSupabaseRealtime() {
   supabaseClient
     .channel("public:withdrawals")
@@ -252,15 +255,14 @@ function initSupabaseRealtime() {
         table: "withdrawals",
         filter: `telegram_id=eq.${userId}`,
       },
-      (payload) => {
-        console.log("Đơn rút tiền thay đổi trạng thái:", payload.new);
+      () => {
         loadWithdrawHistory();
       },
     )
     .subscribe();
 }
 
-// --- HÀM LẤY ĐỊA CHỈ IP ---
+// --- LẤY ĐỊA CHỈ IP ---
 async function fetchUserIP() {
   try {
     const response = await fetch("https://api.ipify.org?format=json");
@@ -271,7 +273,7 @@ async function fetchUserIP() {
   }
 }
 
-// --- HÀM TẢI LỊCH SỬ RÚT TIỀN TỪ SUPABASE ---
+// --- TẢI LỊCH SỬ RÚT TIỀN ---
 async function loadWithdrawHistory() {
   try {
     let { data, error } = await supabaseClient
@@ -304,7 +306,7 @@ async function loadWithdrawHistory() {
   }
 }
 
-// --- HÀM ĐỒNG BỘ DỮ LIỆU VỚI SUPABASE ---
+// --- ĐỒNG BỘ DỮ LIỆU VỚI SUPABASE ---
 async function loadStateFromSupabase() {
   try {
     let { data, error } = await supabaseClient
@@ -327,13 +329,10 @@ async function loadStateFromSupabase() {
         ip_address: userIpAddress,
         is_banned: false,
         used_promo_codes: [],
-        ton_address: "", // Đã bổ sung ton_address mặc định
+        ton_address: "",
       };
 
-      let insertRes = await supabaseClient.from("users").insert([newUser]);
-      if (insertRes.error) {
-        console.error("LỖI INSERT SUPABASE:", insertRes.error);
-      }
+      await supabaseClient.from("users").insert([newUser]);
 
       balance = 0.0;
       minerLevel = 1;
@@ -346,9 +345,7 @@ async function loadStateFromSupabase() {
       usedPromoCodes = [];
       return false;
     } else {
-      if (data.is_banned === true) {
-        return true;
-      }
+      if (data.is_banned === true) return true;
 
       balance = parseFloat(data.balance) || 0;
       minerLevel = parseInt(data.miner_level) || 1;
@@ -378,7 +375,7 @@ async function loadStateFromSupabase() {
 
 async function saveState() {
   try {
-    const { data, error } = await supabaseClient
+    await supabaseClient
       .from("users")
       .update({
         balance: balance,
@@ -390,18 +387,12 @@ async function saveState() {
         task_group: taskState.group,
         ads_next_time: adsNextAvailableTime,
         ip_address: userIpAddress,
-        ton_address: savedTonAddress ? String(savedTonAddress) : "", // Ép kiểu string an toàn
+        ton_address: savedTonAddress ? String(savedTonAddress) : "",
         used_promo_codes: usedPromoCodes,
       })
       .eq("telegram_id", userId);
-
-    if (error) {
-      console.error("LỖI SUPABASE KHI LƯU:", error.message, error.details);
-    } else {
-      console.log("Lưu dữ liệu thành công lên Supabase!");
-    }
   } catch (err) {
-    console.error("Lỗi ngoại lệ khi gọi hàm saveState:", err);
+    console.error("Lỗi ngoại lệ khi lưu trạng thái:", err);
   }
 }
 
@@ -431,7 +422,7 @@ function initUserTelegram() {
   }
 }
 
-/* TÍNH NĂNG PROMO CODE HỆ THỐNG */
+/* TÍNH NĂNG PROMO CODE */
 async function claimPromoCode() {
   const inputEl = document.getElementById("promo-code-input");
   if (!inputEl) return;
@@ -464,8 +455,7 @@ async function claimPromoCode() {
         "Không Tồn Tại",
         "Mã promo code không tồn tại hoặc đã hết hạn!",
       );
-      if (tg && tg.HapticFeedback)
-        tg.HapticFeedback.notificationOccurred("error");
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
       return;
     }
 
@@ -479,8 +469,7 @@ async function claimPromoCode() {
         "Hết Lượt Nhập",
         "Mã quà tặng này đã đạt giới hạn tối đa số lượt sử dụng!",
       );
-      if (tg && tg.HapticFeedback)
-        tg.HapticFeedback.notificationOccurred("warning");
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("warning");
       return;
     }
 
@@ -490,7 +479,6 @@ async function claimPromoCode() {
       .eq("code", code);
 
     if (updateRes.error) {
-      console.error("Lỗi cập nhật lượt dùng mã:", updateRes.error);
       showModal(
         "❌",
         "Lỗi Hệ Thống",
@@ -511,15 +499,9 @@ async function claimPromoCode() {
       "Thành Công!",
       `Bạn đã nhận được +${rewardAmount} ⚡ từ mã code ${code}!`,
     );
-    if (tg && tg.HapticFeedback)
-      tg.HapticFeedback.notificationOccurred("success");
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
   } catch (err) {
     console.error("Lỗi xác thực promo code:", err);
-    showModal(
-      "❌",
-      "Lỗi Hệ Thống",
-      "Không thể kiểm tra mã lúc này. Vui lòng thử lại sau.",
-    );
   }
 }
 
@@ -542,8 +524,7 @@ async function watchAds() {
   const now = Date.now();
 
   if (now < adsNextAvailableTime) {
-    const remaining = adsNextAvailableTime - now;
-    const remainingMinutes = Math.ceil(remaining / 60000);
+    const remainingMinutes = Math.ceil((adsNextAvailableTime - now) / 60000);
     showModal(
       "⏳",
       "Chưa đến lúc!",
@@ -577,10 +558,7 @@ async function watchAds() {
         "Nhận Thưởng Thành Công!",
         "Bạn đã xem hết quảng cáo và nhận được **+150 ⚡** vào tài khoản.",
       );
-
-      if (tg && tg.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred("success");
-      }
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
     }
   } catch (err) {
     console.error("Adsgram error:", err);
@@ -589,9 +567,7 @@ async function watchAds() {
       "Chưa hoàn thành",
       "Bạn cần xem hết video quảng cáo để nhận phần thưởng năng lượng!",
     );
-    if (tg && tg.HapticFeedback) {
-      tg.HapticFeedback.notificationOccurred("error");
-    }
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
   }
 }
 
@@ -637,9 +613,7 @@ function copyRefLink() {
     translations[currentLang].modal_copied_title,
     translations[currentLang].modal_copied_desc,
   );
-
-  if (tg && tg.HapticFeedback)
-    tg.HapticFeedback.notificationOccurred("success");
+  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 
   setTimeout(() => {
     if (copyBtnText) copyBtnText.innerText = translations[currentLang].btn_copy;
@@ -652,10 +626,10 @@ function shareRefLink() {
     "🚀 Tham gia ngay để nhận 200 ⚡ và đào $TA Token miễn phí!";
   const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`;
 
-  if (tg && tg.openTelegramLink) tg.openTelegramLink(fullUrl);
+  if (tg?.openTelegramLink) tg.openTelegramLink(fullUrl);
   else window.open(fullUrl, "_blank");
 
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
+  if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
 }
 
 /* TÍNH TOÁN TỐC ĐỘ MÁY ĐÀO */
@@ -687,10 +661,7 @@ function closeModal() {
 /* NHIỆM VỤ ĐIỂM DANH HẮNG NGÀY */
 function claimDailyReward() {
   const now = Date.now();
-
-  if (lastCheckinTime > 0 && now - lastCheckinTime < DAILY_COOLDOWN) {
-    return;
-  }
+  if (lastCheckinTime > 0 && now - lastCheckinTime < DAILY_COOLDOWN) return;
 
   lastCheckinTime = now;
   balance += 100.0;
@@ -704,8 +675,7 @@ function claimDailyReward() {
     translations[currentLang].modal_task_title,
     `${translations[currentLang].modal_task_desc} +100 ⚡!`,
   );
-  if (tg && tg.HapticFeedback)
-    tg.HapticFeedback.notificationOccurred("success");
+  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 }
 
 function updateDailyCheckInUI() {
@@ -736,7 +706,7 @@ function processTask(taskId, url) {
   if (!btn) return;
 
   if (taskState[taskId] === "init") {
-    if (tg && tg.openTelegramLink) tg.openTelegramLink(url);
+    if (tg?.openTelegramLink) tg.openTelegramLink(url);
     else window.open(url, "_blank");
 
     taskState[taskId] = "waiting";
@@ -762,8 +732,7 @@ function processTask(taskId, url) {
       translations[currentLang].modal_task_title,
       `${translations[currentLang].modal_task_desc} +${reward} ⚡!`,
     );
-    if (tg && tg.HapticFeedback)
-      tg.HapticFeedback.notificationOccurred("success");
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
   }
 }
 
@@ -796,11 +765,9 @@ function upgradeMiner() {
       translations[currentLang].modal_upgrade_title,
       `${translations[currentLang].modal_upgrade_desc} ${minerLevel}!`,
     );
-    if (tg && tg.HapticFeedback)
-      tg.HapticFeedback.notificationOccurred("success");
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
   } else {
-    if (tg && tg.HapticFeedback)
-      tg.HapticFeedback.notificationOccurred("error");
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
   }
 }
 
@@ -819,8 +786,7 @@ function startMining() {
     translations[currentLang].modal_start_title,
     translations[currentLang].modal_start_desc,
   );
-  if (tg && tg.HapticFeedback)
-    tg.HapticFeedback.notificationOccurred("success");
+  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 }
 
 function claimReward() {
@@ -834,8 +800,7 @@ function claimReward() {
     translations[currentLang].modal_claim_title,
     `${translations[currentLang].modal_claim_desc} +${reward.toFixed(0)} ⚡!`,
   );
-  if (tg && tg.HapticFeedback)
-    tg.HapticFeedback.notificationOccurred("success");
+  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 }
 
 function updateUI() {
@@ -901,12 +866,7 @@ function renderTimer() {
 
   const timerEl = document.getElementById("timer-display");
   if (timerEl) {
-    timerEl.innerText =
-      String(hours).padStart(2, "0") +
-      ":" +
-      String(minutes).padStart(2, "0") +
-      ":" +
-      String(seconds).padStart(2, "0");
+    timerEl.innerText = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   }
 }
 
@@ -917,7 +877,7 @@ function toggleLanguage() {
   updateUI();
   updateTaskUI();
   renderWithdrawHistory();
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
+  if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
 }
 
 function applyLanguage() {
@@ -953,10 +913,10 @@ function switchTab(tabName, clickedBtn) {
     if (clickedBtn) clickedBtn.classList.add("active");
   }
 
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+  if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
 }
 
-/* QUẢN LÝ VÍ TON & RÚT TIỀN (WALLET) */
+/* QUẢN LÝ VÍ TON & RÚT TIỀN */
 function saveWalletAddress() {
   const addressInput = document.getElementById("withdraw-address");
   if (!addressInput) return;
@@ -968,8 +928,7 @@ function saveWalletAddress() {
       translations[currentLang].alert_err_address_title,
       translations[currentLang].alert_err_address_desc,
     );
-    if (tg && tg.HapticFeedback)
-      tg.HapticFeedback.notificationOccurred("error");
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
     return;
   }
 
@@ -977,15 +936,14 @@ function saveWalletAddress() {
   updateWalletUIState();
   saveState();
 
-  if (tg && tg.HapticFeedback)
-    tg.HapticFeedback.notificationOccurred("success");
+  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 }
 
 function editWalletAddress() {
   savedTonAddress = "";
   updateWalletUIState();
   saveState();
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
+  if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
 }
 
 function updateWalletUIState() {
@@ -1018,9 +976,7 @@ function updateTonEstimate() {
 
 function maskWalletAddress(wallet) {
   if (!wallet || wallet.length <= 8) return "***";
-  const start = wallet.slice(0, 4);
-  const end = wallet.slice(-4);
-  return `${start}...${end}`;
+  return `${wallet.slice(0, 4)}...${wallet.slice(-4)}`;
 }
 
 async function sendTelegramAdminNotification(
@@ -1035,13 +991,7 @@ async function sendTelegramAdminNotification(
   const url = `https://api.telegram.org/bot${ADMIN_BOT_TOKEN}/sendMessage`;
   const maskedWallet = maskWalletAddress(address);
 
-  const message1 =
-    `🚨 <b>CÓ YÊU CẦU RÚT TIỀN MỚI!</b>\n\n` +
-    `👤 <b>User:</b> ${username}\n` +
-    `⚡ <b>Số coin rút:</b> ${amount.toLocaleString()} ⚡\n` +
-    `💎 <b>Quy đổi:</b> ${tonAmount} TON\n` +
-    `👛 <b>Ví TON:</b>\n<code>${address}</code>\n\n` +
-    `👉 Vào ngay Supabase để duyệt đơn nhé!`;
+  const message1 = `🚨 <b>CÓ YÊU CẦU RÚT TIỀN MỚI!</b>\n\n👤 <b>User:</b> ${username}\n⚡ <b>Số coin rút:</b> ${amount.toLocaleString()} ⚡\n💎 <b>Quy đổi:</b> ${tonAmount} TON\n👛 <b>Ví TON:</b>\n<code>${address}</code>\n\n👉 Vào ngay Supabase để duyệt đơn nhé!`;
 
   const inlineKeyboard = {
     inline_keyboard: [
@@ -1052,11 +1002,7 @@ async function sendTelegramAdminNotification(
     ],
   };
 
-  const message2 =
-    `✅ <b>TRANSFER SUCCESSFUL!</b>\n\n` +
-    `👤 <b>User:</b> ${username}\n` +
-    `💎 <b>Amount:</b> ${tonAmount} TON\n` +
-    `👛 <b>TON Wallet:</b> <code>${maskedWallet}</code>`;
+  const message2 = `✅ <b>TRANSFER SUCCESSFUL!</b>\n\n👤 <b>User:</b> ${username}\n💎 <b>Amount:</b> ${tonAmount} TON\n👛 <b>TON Wallet:</b> <code>${maskedWallet}</code>`;
 
   try {
     await fetch(url, {
@@ -1097,8 +1043,7 @@ async function submitWithdrawRequest() {
       translations[currentLang].alert_err_address_title,
       "Vui lòng nhập và lưu địa chỉ ví TON trước khi rút!",
     );
-    if (tg && tg.HapticFeedback)
-      tg.HapticFeedback.notificationOccurred("error");
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
     return;
   }
 
@@ -1108,8 +1053,7 @@ async function submitWithdrawRequest() {
       translations[currentLang].alert_err_min_title,
       translations[currentLang].alert_err_min_desc,
     );
-    if (tg && tg.HapticFeedback)
-      tg.HapticFeedback.notificationOccurred("warning");
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("warning");
     return;
   }
 
@@ -1119,8 +1063,7 @@ async function submitWithdrawRequest() {
       translations[currentLang].alert_err_balance_title,
       translations[currentLang].alert_err_balance_desc,
     );
-    if (tg && tg.HapticFeedback)
-      tg.HapticFeedback.notificationOccurred("error");
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
     return;
   }
 
@@ -1140,7 +1083,6 @@ async function submitWithdrawRequest() {
     .select();
 
   if (error || !data || data.length === 0) {
-    console.error("Lỗi khi lưu lịch sử rút tiền lên Supabase:", error);
     showModal(
       "❌",
       "Lỗi Server",
@@ -1149,10 +1091,8 @@ async function submitWithdrawRequest() {
     return;
   }
 
-  const insertedId = data[0].id;
-
   await sendTelegramAdminNotification(
-    insertedId,
+    data[0].id,
     currentUsername,
     amount,
     tonAmountCalc,
@@ -1172,8 +1112,7 @@ async function submitWithdrawRequest() {
     translations[currentLang].alert_pending_title,
     translations[currentLang].alert_pending_desc,
   );
-  if (tg && tg.HapticFeedback)
-    tg.HapticFeedback.notificationOccurred("success");
+  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 }
 
 function renderWithdrawHistory() {

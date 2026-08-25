@@ -11,7 +11,8 @@ bot.start((ctx) => {
     `⛏️ *Start Mining Instantly:* Launch the app and begin accumulating TA Coins.\n\n` +
     `⚡ *Watch & Earn More:* Watch short video ads to instantly claim *+150 ⚡ Energy*.\n\n` +
     `📊 *Track Your Progress:* Monitor your live balance and manage your profile seamlessly.\n\n` +
-    `👉 *Tap the button below to launch the Mini App and start mining!*`;
+    `👉 *Tap the button below to launch the Mini App and start mining!*` +
+    `❗❗❗PLEASE SET YOUR USERNAME; OTHERWISE, YOUR DATE WILL NOT BE SAVED TO THE SYSTEM`;
 
   return ctx.reply(welcomeMessage, {
     parse_mode: "Markdown",

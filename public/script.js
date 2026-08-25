@@ -208,18 +208,43 @@ let lastCheckinTime = 0;
 let withdrawHistory = [];
 let usedPromoCodes = [];
 
+// CẬP NHẬT TRẠNG THÁI THANH LOADING
+function updateLoadingProgress(text, percent) {
+  const statusTextEl = document.getElementById("loading-status-text");
+  const progressFillEl = document.getElementById("loading-progress-fill");
+  if (statusTextEl) statusTextEl.innerText = text;
+  if (progressFillEl) progressFillEl.style.width = `${percent}%`;
+}
+
+function hideLoadingScreen() {
+  const loadingScreen = document.getElementById("loading-screen");
+  if (loadingScreen) {
+    loadingScreen.classList.add("fade-out");
+    setTimeout(() => {
+      loadingScreen.style.display = "none";
+    }, 500);
+  }
+}
+
 // KHỞI CHẠY ỨNG DỤNG VÀ TẢI TỪ SUPABASE
 document.addEventListener("DOMContentLoaded", async () => {
+  updateLoadingProgress("Đang khởi tạo Telegram...", 20);
   initUserTelegram();
+
+  updateLoadingProgress("Đang kiểm tra mạng & IP...", 40);
   await fetchUserIP();
 
+  updateLoadingProgress("Đang tải dữ liệu tài khoản...", 70);
   const isBanned = await loadStateFromSupabase();
   if (isBanned) {
+    hideLoadingScreen();
     showBannedScreen();
     return;
   }
 
   await loadWithdrawHistory();
+
+  updateLoadingProgress("Hoàn tất!", 100);
   applyLanguage();
   updateUI();
   updateTaskUI();
@@ -227,6 +252,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateWalletUIState();
   initAdsSystem();
   initSupabaseRealtime();
+
+  // Ẩn màn hình loading mượt mà
+  setTimeout(() => {
+    hideLoadingScreen();
+  }, 400);
 });
 
 // --- HÀM HIỂN THỊ MÀN HÌNH KHÓA TÀI KHOẢN ---

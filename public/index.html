@@ -16,6 +16,23 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <!-- MÀN HÌNH LOADING -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-content">
+        <div class="loading-ring-wrapper">
+          <div class="loading-ring"></div>
+          <div class="loading-icon">⚡</div>
+        </div>
+        <h2 class="loading-title">TA NETWORK</h2>
+        <p class="loading-subtitle" id="loading-status-text">
+          Đang kết nối hệ thống...
+        </p>
+        <div class="loading-progress-bar">
+          <div class="loading-progress-fill" id="loading-progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="phone-frame">
       <div class="app-container">
         <!-- NỘI DUNG CÁC TAB -->
@@ -437,26 +454,25 @@
           </button>
         </nav>
       </div>
+    </div>
 
-      <!-- POPUP MODAL THÔNG BÁO -->
-      <div class="modal-overlay" id="custom-modal">
-        <div class="modal-card">
-          <div class="modal-icon" id="modal-icon">🚀</div>
-          <h3 class="modal-title" id="modal-title">Thành công!</h3>
-          <p class="modal-desc" id="modal-desc">
-            Thao tác của bạn đã hoàn tất.
-          </p>
-          <button
-            class="modal-btn"
-            onclick="closeModal()"
-            data-i18n="modal_close_btn"
-          >
-            ĐÃ HIỂU
-          </button>
-        </div>
+    <!-- Modal Thông báo chung -->
+    <div class="modal-overlay" id="custom-modal">
+      <div class="modal-card">
+        <div class="modal-icon" id="modal-icon">🚀</div>
+        <h3 class="modal-title" id="modal-title">Tiêu Đề</h3>
+        <p class="modal-desc" id="modal-desc">Nội dung thông báo...</p>
+        <button
+          class="modal-btn"
+          onclick="closeModal()"
+          data-i18n="modal_close_btn"
+        >
+          ĐÃ HIỂU
+        </button>
       </div>
     </div>
 
+    <!-- Script file -->
     <script src="script.js"></script>
   </body>
 </html>

@@ -507,7 +507,7 @@ async function claimPromoCode() {
 
 /* HỆ THỐNG XEM QUẢNG CÁO ADSGRAM */
 const adController = window.Adsgram
-  ? window.Adsgram.init({ blockId: "44529" })
+  ? window.Adsgram.init({ blockId: "44493" })
   : null;
 
 function initAdsSystem() {

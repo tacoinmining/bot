@@ -1,4 +1,6 @@
-/* Reset CSS */
+/* ==========================================
+   1. RESET & GENERAL STYLES
+   ========================================== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -14,11 +16,13 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  overflow: hidden;
+  height: 100vh;
+  overflow: hidden; /* Khóa cuộn toàn trang */
 }
 
-/* KHUNG MÀN HÌNH ĐIỆN THOẠI */
+/* ==========================================
+   2. PHONE FRAME & APP CONTAINER
+   ========================================== */
 .phone-frame {
   width: 100vw;
   height: 100vh;
@@ -63,17 +67,28 @@ body {
   z-index: 2;
   background: #080313;
   border-radius: 26px;
-  overflow: hidden;
+  overflow: hidden; /* Đảm bảo không bị lòi khung cuộn ra ngoài app */
 }
 
+/* ==========================================
+   3. TAB CONTENT & SCROLLING AREA
+   ========================================== */
 .tab-content-wrapper {
   width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-y: auto;
-  padding-bottom: 70px;
+  overflow-y: auto; /* Chỉ phần này được phép cuộn */
+  overflow-x: hidden;
+  padding-bottom: 90px; /* Chừa khoảng trống an toàn để không bị thanh menu che nội dung cuối */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ẩn thanh cuộn mặc định nhưng vẫn vuốt/cuộn bình thường */
+.tab-content-wrapper::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
 }
 
 .tab-view {
@@ -99,7 +114,50 @@ body {
   }
 }
 
-/* PROFILE & LANG BUTTON */
+/* ==========================================
+   4. NAVIGATION BAR (Cố định ở đáy)
+   ========================================== */
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(8, 3, 19, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 242, 254, 0.2);
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  z-index: 1000; /* Đảm bảo luôn nổi lên trên các thành phần khác */
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  color: #6b5a8e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  gap: 4px;
+  cursor: pointer;
+  width: 25%;
+}
+
+.nav-item.active {
+  color: #ff007f;
+  text-shadow: 0 0 8px rgba(255, 0, 127, 0.6);
+}
+
+.nav-icon {
+  font-size: 18px;
+}
+
+/* ==========================================
+   5. PROFILE & LANG BUTTON
+   ========================================== */
 .profile-header-row {
   width: 100%;
   display: flex;
@@ -228,7 +286,9 @@ body {
   text-shadow: 0 0 10px #00f2fe;
 }
 
-/* MINING CARD */
+/* ==========================================
+   6. MINING CARD & ANIMATIONS
+   ========================================== */
 .neon-card {
   width: 100%;
   position: relative;
@@ -391,7 +451,6 @@ body {
   transition: all 0.2s ease;
 }
 
-/* Thêm hiệu ứng active scale cho nút bấm chính */
 .neon-btn:active {
   transform: scale(0.96);
 }
@@ -408,7 +467,9 @@ body {
   box-shadow: 0 5px 15px rgba(0, 255, 135, 0.35);
 }
 
-/* UPGRADE CARD */
+/* ==========================================
+   7. UPGRADE CARD
+   ========================================== */
 .upgrade-card {
   width: 100%;
   border-radius: 16px;
@@ -501,45 +562,9 @@ body {
   color: #00f2fe;
 }
 
-/* NAVIGATION */
-.bottom-nav {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: rgba(8, 3, 19, 0.95);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0, 242, 254, 0.2);
-  display: flex;
-  justify-content: space-around;
-  padding: 10px 0;
-  z-index: 10;
-}
-
-.nav-item {
-  background: none;
-  border: none;
-  color: #6b5a8e;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 10px;
-  font-weight: 700;
-  gap: 4px;
-  cursor: pointer;
-  width: 25%;
-}
-
-.nav-item.active {
-  color: #ff007f;
-  text-shadow: 0 0 8px rgba(255, 0, 127, 0.6);
-}
-
-.nav-icon {
-  font-size: 18px;
-}
-
-/* MODAL */
+/* ==========================================
+   8. MODAL
+   ========================================== */
 .modal-overlay {
   position: absolute;
   top: 0;
@@ -622,7 +647,9 @@ body {
   transform: scale(0.95);
 }
 
-/* TASKS */
+/* ==========================================
+   9. TASKS SECTION
+   ========================================== */
 .tasks-container {
   display: flex;
   flex-direction: column;
@@ -749,7 +776,9 @@ body {
   box-shadow: none;
 }
 
-/* INVITE */
+/* ==========================================
+   10. INVITE SECTION
+   ========================================== */
 .invite-container {
   display: flex;
   flex-direction: column;
@@ -891,7 +920,9 @@ body {
   border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
-/* WALLET */
+/* ==========================================
+   11. WALLET SECTION
+   ========================================== */
 .wallet-container {
   display: flex;
   flex-direction: column;
@@ -1083,15 +1114,9 @@ body {
   border: 1px solid rgba(255, 0, 85, 0.4);
 }
 
-@media (max-width: 480px) {
-  .phone-frame {
-    max-width: 100vw;
-    max-height: 100vh;
-    border-radius: 0;
-  }
-}
-
-/* STYLING CHO CARD XEM QUẢNG CÁO */
+/* ==========================================
+   12. ADS & PROMO CODE CARD
+   ========================================== */
 .ads-card {
   background: #0e081e;
   border: 1.5px solid rgba(0, 242, 254, 0.4);
@@ -1149,7 +1174,6 @@ body {
   box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
 }
 
-/* Hiệu ứng thu nhỏ khi bấm vào nút xem quảng cáo */
 .ads-box:active {
   transform: scale(0.96);
 }
@@ -1191,7 +1215,6 @@ body {
   text-align: center;
 }
 
-/* Bổ sung cho giao diện Ví mới */
 .wallet-input-row {
   display: flex;
   gap: 8px;
@@ -1239,7 +1262,6 @@ body {
   padding: 4px 10px;
 }
 
-/* --- CSS CHO PROMO CODE CARD --- */
 .promo-card {
   background: linear-gradient(145deg, #1e293b, #0f172a);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1253,7 +1275,6 @@ body {
   overflow: hidden;
 }
 
-/* Hiệu ứng ánh sáng nhẹ góc trên card */
 .promo-card::before {
   content: "";
   position: absolute;
@@ -1381,71 +1402,10 @@ body {
   transform: translateX(3px);
 }
 
-/* Sửa lại body để khóa cuộn toàn trang */
-body {
-  background: #030108;
-  color: #ffffff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  overflow: hidden; /* Chặn cuộn body */
-}
-
-/* KHUNG MÀN HÌNH ĐIỆN THOẠI */
-.phone-frame {
-  width: 100vw;
-  height: 100vh;
-  max-width: 420px;
-  max-height: 746px;
-  aspect-ratio: 9 / 16;
-  background: #080313;
-  border-radius: 28px;
-  position: relative;
-  overflow: hidden; /* Cố định các thành phần bên trong không tràn ra ngoài */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2px;
-}
-
-.app-container {
-  width: 100%;
-  height: 100%;
-  padding: 14px 14px 0 14px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 2;
-  background: #080313;
-  border-radius: 26px;
-  overflow: hidden; /* Đảm bảo không bị lòi khung cuộn ra ngoài app */
-}
-
-/* Vùng chứa nội dung tab có thể cuộn độc lập */
-.tab-content-wrapper {
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow-y: auto; /* Chỉ phần này được phép cuộn */
-  overflow-x: hidden;
-  padding-bottom: 80px; /* Tạo khoảng trống để không bị thanh menu che nội dung cuối */
-  -webkit-overflow-scrolling: touch;
-}
-
-/* NAVIGATION - Cố định tuyệt đối ở đáy app container */
-.bottom-nav {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: rgba(8, 3, 19, 0.95);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0, 242, 254, 0.2);
-  display: flex;
-  justify-content: space-around;
-  padding: 10px 0;
-  z-index: 100; /* Đảm bảo luôn nằm trên cùng các layer khác */
+@media (max-width: 480px) {
+  .phone-frame {
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+  }
 }

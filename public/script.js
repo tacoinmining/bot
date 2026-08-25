@@ -253,13 +253,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   initAdsSystem();
   initSupabaseRealtime();
 
-  // Ẩn màn hình loading mượt mà
   setTimeout(() => {
     hideLoadingScreen();
   }, 400);
 });
 
-// --- HÀM HIỂN THỊ MÀN HÌNH KHÓA TÀI KHOẢN ---
+// --- HIỂN THỊ MÀN HÌNH KHÓA TÀI KHOẢN ---
 function showBannedScreen() {
   const bodyEl = document.body;
   if (bodyEl) {
@@ -801,10 +800,37 @@ function upgradeMiner() {
   }
 }
 
+// Xử lý action bắt đầu/thu hoạch kết hợp quảng cáo Moontag
 function handleAction() {
   const now = Date.now();
-  if (!endTime) startMining();
-  else if (now >= endTime) claimReward();
+
+  if (!endTime) {
+    if (typeof show_11651812 === "function") {
+      show_11651812()
+        .then(() => {
+          startMining();
+        })
+        .catch((err) => {
+          console.log("Quảng cáo bị lỗi hoặc bị tắt:", err);
+          startMining();
+        });
+    } else {
+      startMining();
+    }
+  } else if (now >= endTime) {
+    if (typeof show_11651812 === "function") {
+      show_11651812()
+        .then(() => {
+          claimReward();
+        })
+        .catch((err) => {
+          console.log("Quảng cáo bị lỗi hoặc bị tắt:", err);
+          claimReward();
+        });
+    } else {
+      claimReward();
+    }
+  }
 }
 
 function startMining() {

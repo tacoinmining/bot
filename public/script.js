@@ -198,6 +198,8 @@ let taskState = {
   daily: false,
   channel: "init",
   group: "init",
+  group2: "init",
+  group3: "init",
 };
 let lastCheckinTime = 0;
 let adsNextTime = 0;
@@ -389,6 +391,8 @@ async function loadStateFromSupabase() {
         ads_next_time: 0,
         task_channel: "init",
         task_group: "init",
+        task_group2: "init",
+        task_group3: "init",
         ip_address: userIpAddress,
         is_banned: false,
         used_promo_codes: [],
@@ -404,6 +408,8 @@ async function loadStateFromSupabase() {
       adsNextTime = 0;
       taskState.channel = "init";
       taskState.group = "init";
+      taskState.group2 = "init";
+      taskState.group3 = "init";
       savedTonAddress = "";
       usedPromoCodes = [];
       return false;
@@ -417,6 +423,8 @@ async function loadStateFromSupabase() {
       adsNextTime = data.ads_next_time ? parseInt(data.ads_next_time) : 0;
       taskState.channel = data.task_channel || "init";
       taskState.group = data.task_group || "init";
+      taskState.group2 = data.task_group2 || "init";
+      taskState.group3 = data.task_group3 || "init";
       savedTonAddress = data.ton_address || "";
       usedPromoCodes = data.used_promo_codes || [];
 
@@ -447,6 +455,8 @@ async function saveState() {
         ads_next_time: adsNextTime,
         task_channel: taskState.channel,
         task_group: taskState.group,
+        task_group2: taskState.group2,
+        task_group3: taskState.group3,
         ip_address: userIpAddress,
         ton_address: savedTonAddress ? String(savedTonAddress) : "",
         used_promo_codes: usedPromoCodes,
@@ -604,7 +614,9 @@ function shareRefLink() {
   const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
   const shareText =
     "🚀 Tham gia ngay để nhận 200 ⚡ và đào $TA Token miễn phí!";
-  const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`;
+  const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(
+    refLink,
+  )}&text=${encodeURIComponent(shareText)}`;
 
   if (tg?.openTelegramLink) tg.openTelegramLink(fullUrl);
   else window.open(fullUrl, "_blank");
@@ -670,7 +682,9 @@ function updateDailyCheckInUI() {
     const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
 
     dailyBtn.className = "task-btn done-btn disabled";
-    dailyBtn.innerText = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    dailyBtn.innerText = `${String(hours).padStart(2, "0")}:${String(
+      minutes,
+    ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
     dailyBtn.onclick = null;
   } else {
     dailyBtn.className = "task-btn claim-btn";
@@ -690,7 +704,9 @@ function updateAdsTaskUI() {
     const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
 
     watchAdBtn.className = "task-btn done-btn disabled";
-    watchAdBtn.innerText = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    watchAdBtn.innerText = `${String(minutes).padStart(2, "0")}:${String(
+      seconds,
+    ).padStart(2, "0")}`;
     watchAdBtn.onclick = null;
   } else {
     watchAdBtn.className = "task-btn claim-btn";
@@ -778,7 +794,7 @@ function updateTaskUI() {
     updateAdsTaskUI();
   }, 1000);
 
-  ["channel", "group"].forEach((taskId) => {
+  ["channel", "group", "group2", "group3"].forEach((taskId) => {
     const btn = document.getElementById(`btn-task-${taskId}`);
     if (!btn) return;
     const taskItemElement = btn.closest(".task-item");
@@ -911,7 +927,9 @@ function updateUI() {
   } else {
     startBtn.className = "neon-btn claim";
     if (btnText)
-      btnText.innerText = `${translations[currentLang].btn_claim} +${getCycleReward().toFixed(0)} ⚡`;
+      btnText.innerText = `${
+        translations[currentLang].btn_claim
+      } +${getCycleReward().toFixed(0)} ⚡`;
     if (timerDisplay) timerDisplay.style.display = "none";
     if (neonRing) neonRing.classList.remove("active");
   }
@@ -930,7 +948,9 @@ function renderTimer() {
 
   const timerEl = document.getElementById("timer-display");
   if (timerEl) {
-    timerEl.innerText = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    timerEl.innerText = `${String(hours).padStart(2, "0")}:${String(
+      minutes,
+    ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   }
 }
 

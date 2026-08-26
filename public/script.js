@@ -89,11 +89,6 @@ const translations = {
     status_pending: "Đang chờ ⏳",
     status_success: "Thành công ✅",
     status_rejected: "Từ chối ❌",
-
-    ads_card_title: "XEM QUẢNG CÁO",
-    ads_box_name: "Xem Quảng Cáo",
-    ads_note_warning: "⚠️ Chú ý: Xem hết video để nhận quà!",
-    ads_note_cooldown: "* Có thể nhận lại sau 15 phút",
   },
   en: {
     balance_label: "BALANCE",
@@ -168,11 +163,6 @@ const translations = {
     status_pending: "Pending ⏳",
     status_success: "Success ✅",
     status_rejected: "Rejected ❌",
-
-    ads_card_title: "WATCH ADS",
-    ads_box_name: "Watch Ad",
-    ads_note_warning: "⚠️ Note: Watch the full video to get reward!",
-    ads_note_cooldown: "* Can be claimed again after 15 minutes",
   },
 };
 
@@ -182,7 +172,6 @@ const UPGRADE_COST = 3000.0;
 const BASE_HOURLY_RATE = 40.0;
 const RATE_INCREASE_PER_LEVEL = 1.0;
 const TON_RATE = 0.000001;
-const ADS_COOLDOWN_TIME = 15 * 60 * 1000;
 const DAILY_COOLDOWN = 24 * 60 * 60 * 1000;
 
 // BIẾN TRẠNG THÁI GAME
@@ -196,8 +185,6 @@ let userIpAddress = "";
 let savedTonAddress = "";
 
 let timerInterval = null;
-let adsTimerInterval = null;
-let adsNextAvailableTime = 0;
 
 let taskState = {
   daily: false,
@@ -250,7 +237,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateTaskUI();
   setupRefLink();
   updateWalletUIState();
-  initAdsSystem();
   initSupabaseRealtime();
 
   setTimeout(() => {
@@ -354,7 +340,6 @@ async function loadStateFromSupabase() {
         last_checkin: 0,
         task_channel: "init",
         task_group: "init",
-        ads_next_time: 0,
         ip_address: userIpAddress,
         is_banned: false,
         used_promo_codes: [],
@@ -369,7 +354,6 @@ async function loadStateFromSupabase() {
       lastCheckinTime = 0;
       taskState.channel = "init";
       taskState.group = "init";
-      adsNextAvailableTime = 0;
       savedTonAddress = "";
       usedPromoCodes = [];
       return false;
@@ -382,9 +366,6 @@ async function loadStateFromSupabase() {
       lastCheckinTime = data.last_checkin ? parseInt(data.last_checkin) : 0;
       taskState.channel = data.task_channel || "init";
       taskState.group = data.task_group || "init";
-      adsNextAvailableTime = data.ads_next_time
-        ? parseInt(data.ads_next_time)
-        : 0;
       savedTonAddress = data.ton_address || "";
       usedPromoCodes = data.used_promo_codes || [];
 
@@ -414,7 +395,6 @@ async function saveState() {
         last_checkin: lastCheckinTime,
         task_channel: taskState.channel,
         task_group: taskState.group,
-        ads_next_time: adsNextAvailableTime,
         ip_address: userIpAddress,
         ton_address: savedTonAddress ? String(savedTonAddress) : "",
         used_promo_codes: usedPromoCodes,
@@ -531,93 +511,6 @@ async function claimPromoCode() {
     if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
   } catch (err) {
     console.error("Lỗi xác thực promo code:", err);
-  }
-}
-
-/* HỆ THỐNG XEM QUẢNG CÁO ADSGRAM */
-const adController = window.Adsgram
-  ? window.Adsgram.init({ blockId: "44537" })
-  : null;
-
-function initAdsSystem() {
-  updateAdsUI();
-  updateDailyCheckInUI();
-  if (adsTimerInterval) clearInterval(adsTimerInterval);
-  adsTimerInterval = setInterval(() => {
-    updateAdsUI();
-    updateDailyCheckInUI();
-  }, 1000);
-}
-
-async function watchAds() {
-  const now = Date.now();
-
-  if (now < adsNextAvailableTime) {
-    const remainingMinutes = Math.ceil((adsNextAvailableTime - now) / 60000);
-    showModal(
-      "⏳",
-      "Chưa đến lúc!",
-      `Vui lòng chờ thêm khoảng **${remainingMinutes} phút** nữa trước khi xem quảng cáo tiếp theo nhé!`,
-    );
-    return;
-  }
-
-  if (!adController) {
-    showModal(
-      "⚠️",
-      "Lỗi kết nối",
-      "Không thể tải hệ thống quảng cáo Adsgram. Vui lòng thử lại sau!",
-    );
-    return;
-  }
-
-  try {
-    const result = await adController.show();
-
-    if (result && result.done) {
-      adsNextAvailableTime = Date.now() + ADS_COOLDOWN_TIME;
-      balance += 150.0;
-
-      await saveState();
-      updateUI();
-      updateAdsUI();
-
-      showModal(
-        "🎉",
-        "Nhận Thưởng Thành Công!",
-        "Bạn đã xem hết quảng cáo và nhận được **+150 ⚡** vào tài khoản.",
-      );
-      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-    }
-  } catch (err) {
-    console.error("Adsgram error:", err);
-    showModal(
-      "❌",
-      "Chưa hoàn thành",
-      "Bạn cần xem hết video quảng cáo để nhận phần thưởng năng lượng!",
-    );
-    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
-  }
-}
-
-function updateAdsUI() {
-  const now = Date.now();
-  const adsBtn = document.getElementById("ads-banner-btn");
-  const timerBadge = document.getElementById("ads-timer-badge");
-  if (!adsBtn || !timerBadge) return;
-
-  if (now < adsNextAvailableTime) {
-    adsBtn.classList.add("disabled");
-    timerBadge.style.display = "block";
-
-    const remaining = adsNextAvailableTime - now;
-    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-
-    timerBadge.innerText = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  } else {
-    adsBtn.classList.remove("disabled");
-    timerBadge.style.display = "none";
   }
 }
 
@@ -800,7 +693,7 @@ function upgradeMiner() {
   }
 }
 
-// Xử lý action bắt đầu/thu hoạch kết hợp quảng cáo Moontag
+// Xử lý action bắt đầu/thu hoạch kết hợp quảng cáo Monetag
 function handleAction() {
   const now = Date.now();
 

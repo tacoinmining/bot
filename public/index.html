@@ -11,7 +11,7 @@
     <!-- External SDKs -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <!-- Monetag SDK -->
     <script
       src="//libtl.com/sdk.js"
       data-zone="11651812"
@@ -184,42 +184,7 @@
           <!-- TAB 2: TASKS -->
           <section class="tab-view" id="tab-tasks">
             <div class="tasks-container">
-              <!-- 1. Xem quảng cáo -->
-              <div class="ads-card">
-                <div class="ads-card-header">
-                  <span class="ads-card-title" data-i18n="ads_card_title"
-                    >XEM QUẢNG CÁO</span
-                  >
-                  <div
-                    class="ads-timer-badge"
-                    id="ads-timer-badge"
-                    style="display: none"
-                  >
-                    15:00
-                  </div>
-                </div>
-
-                <div class="ads-box-wrapper">
-                  <div class="ads-box" id="ads-banner-btn" onclick="watchAds()">
-                    <div class="ads-box-icon">📺</div>
-                    <div class="ads-box-name" data-i18n="ads_box_name">
-                      Xem Quảng Cáo
-                    </div>
-                    <div class="ads-box-reward">+150 ⚡</div>
-                  </div>
-                </div>
-
-                <div class="ads-notes">
-                  <div data-i18n="ads_note_warning">
-                    ⚠️ Chú ý: Xem hết video để nhận quà!
-                  </div>
-                  <div data-i18n="ads_note_cooldown">
-                    * Có thể nhận lại sau 15 phút
-                  </div>
-                </div>
-              </div>
-
-              <!-- 2. Điểm danh hằng ngày -->
+              <!-- Điểm danh hằng ngày -->
               <div class="daily-card">
                 <div class="daily-info">
                   <div class="daily-icon">📅</div>
@@ -240,7 +205,7 @@
                 </button>
               </div>
 
-              <!-- 3. Nhiệm vụ Telegram -->
+              <!-- Nhiệm vụ Telegram -->
               <div class="task-section-group">
                 <div class="tasks-header" data-i18n="social_tasks_title">
                   Nhiệm Vụ Telegram

@@ -1144,3 +1144,50 @@ function renderWithdrawHistory() {
     })
     .join("");
 }
+
+// KHỞI CHẠY ỨNG DỤNG VÀ TẢI TỪ SUPABASE
+document.addEventListener("DOMContentLoaded", async () => {
+  updateLoadingProgress("Đang khởi tạo Telegram...", 20);
+  initUserTelegram();
+
+  updateLoadingProgress("Đang kiểm tra mạng & IP...", 40);
+  await fetchUserIP();
+
+  updateLoadingProgress("Đang tải dữ liệu tài khoản...", 70);
+  const isBanned = await loadStateFromSupabase();
+  if (isBanned) {
+    hideLoadingScreen();
+    showBannedScreen();
+    return;
+  }
+
+  await loadWithdrawHistory();
+
+  updateLoadingProgress("Hoàn tất!", 100);
+  applyLanguage();
+  updateUI();
+  updateTaskUI();
+  setupRefLink();
+  updateWalletUIState();
+  initSupabaseRealtime();
+
+  setTimeout(() => {
+    hideLoadingScreen();
+
+    // --- TỰ ĐỘNG KÍCH HOẠT IN-APP INTERSTITIAL CỦA MONETAG ---
+    if (typeof show_11651812 === "function") {
+      show_11651812({
+        type: "inApp",
+        inAppSettings: {
+          frequency: 2,
+          capping: 0.1,
+          interval: 30,
+          timeout: 5,
+          everyPage: false,
+        },
+      }).catch((err) => {
+        console.log("In-App Interstitial error:", err);
+      });
+    }
+  }, 400);
+});

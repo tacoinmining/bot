@@ -179,7 +179,7 @@ const BASE_HOURLY_RATE = 40.0;
 const RATE_INCREASE_PER_LEVEL = 1.0;
 const TON_RATE = 0.000001;
 const DAILY_COOLDOWN = 24 * 60 * 60 * 1000;
-const ADS_COOLDOWN = 15 * 60 * 1000; // 15 Phút chờ giữa các lần xem quảng cáo
+const ADS_COOLDOWN = 15 * 60 * 1000;
 
 // BIẾN TRẠNG THÁI GAME
 let balance = 0.0;
@@ -200,12 +200,11 @@ let taskState = {
   group: "init",
 };
 let lastCheckinTime = 0;
-let adsNextTime = 0; // Thời điểm có thể xem quảng cáo tiếp theo
+let adsNextTime = 0;
 let withdrawHistory = [];
-let friendsList = []; // Danh sách bạn bè được mời
+let friendsList = [];
 let usedPromoCodes = [];
 
-// CẬP NHẬT TRẠNG THÁI THANH LOADING
 function updateLoadingProgress(text, percent) {
   const statusTextEl = document.getElementById("loading-status-text");
   const progressFillEl = document.getElementById("loading-progress-fill");
@@ -223,7 +222,6 @@ function hideLoadingScreen() {
   }
 }
 
-// --- HIỂN THỊ MÀN HÌNH KHÓA TÀI KHOẢN ---
 function showBannedScreen() {
   const bodyEl = document.body;
   if (bodyEl) {
@@ -237,7 +235,6 @@ function showBannedScreen() {
   }
 }
 
-// --- LẮNG NGHE REALTIME TỪ SUPABASE ---
 function initSupabaseRealtime() {
   supabaseClient
     .channel("public:withdrawals")
@@ -255,7 +252,6 @@ function initSupabaseRealtime() {
     )
     .subscribe();
 
-  // Lắng nghe realtime danh sách bạn bè mới tham gia
   supabaseClient
     .channel("public:referrals")
     .on(
@@ -266,14 +262,13 @@ function initSupabaseRealtime() {
         table: "referrals",
         filter: `referrer_id=eq.${userId}`,
       },
-      (payload) => {
+      () => {
         loadFriendsList();
       },
     )
     .subscribe();
 }
 
-// --- LẤY ĐỊA CHỈ IP ---
 async function fetchUserIP() {
   try {
     const response = await fetch("https://api.ipify.org?format=json");
@@ -284,7 +279,6 @@ async function fetchUserIP() {
   }
 }
 
-// --- TẢI LỊCH SỬ RÚT TIỀN ---
 async function loadWithdrawHistory() {
   try {
     let { data, error } = await supabaseClient
@@ -317,13 +311,12 @@ async function loadWithdrawHistory() {
   }
 }
 
-// --- TẢI DANH SÁCH BẠN BÈ ---
 async function loadFriendsList() {
   try {
     let { data, error } = await supabaseClient
       .from("referrals")
       .select("*")
-      .eq("referrer_id", String(userId)) // Ép kiểu string để luôn khớp với Supabase
+      .eq("referrer_id", String(userId))
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -377,7 +370,6 @@ function renderFriendsList() {
     .join("");
 }
 
-// --- ĐỒNG BỘ DỮ LIỆU VỚI SUPABASE ---
 async function loadStateFromSupabase() {
   try {
     let { data, error } = await supabaseClient
@@ -491,7 +483,6 @@ function initUserTelegram() {
   }
 }
 
-/* TÍNH NĂNG PROMO CODE */
 async function claimPromoCode() {
   const inputEl = document.getElementById("promo-code-input");
   if (!inputEl) return;
@@ -574,7 +565,6 @@ async function claimPromoCode() {
   }
 }
 
-/* LOGIC MỜI BẠN BÈ */
 function setupRefLink() {
   const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
   const input = document.getElementById("ref-link-input");
@@ -584,22 +574,30 @@ function setupRefLink() {
 function copyRefLink() {
   const input = document.getElementById("ref-link-input");
   if (!input) return;
-  input.select();
-  document.execCommand("copy");
 
-  const copyBtnText = document.getElementById("copy-btn-text");
-  if (copyBtnText) copyBtnText.innerText = translations[currentLang].btn_copied;
+  navigator.clipboard
+    .writeText(input.value)
+    .then(() => {
+      const copyBtnText = document.getElementById("copy-btn-text");
+      if (copyBtnText)
+        copyBtnText.innerText = translations[currentLang].btn_copied;
 
-  showModal(
-    "📋",
-    translations[currentLang].modal_copied_title,
-    translations[currentLang].modal_copied_desc,
-  );
-  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+      showModal(
+        "📋",
+        translations[currentLang].modal_copied_title,
+        translations[currentLang].modal_copied_desc,
+      );
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 
-  setTimeout(() => {
-    if (copyBtnText) copyBtnText.innerText = translations[currentLang].btn_copy;
-  }, 2000);
+      setTimeout(() => {
+        if (copyBtnText)
+          copyBtnText.innerText = translations[currentLang].btn_copy;
+      }, 2000);
+    })
+    .catch(() => {
+      input.select();
+      document.execCommand("copy");
+    });
 }
 
 function shareRefLink() {
@@ -614,7 +612,6 @@ function shareRefLink() {
   if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
 }
 
-/* TÍNH TOÁN TỐC ĐỘ MÁY ĐÀO */
 function getHourlyRate() {
   return BASE_HOURLY_RATE + (minerLevel - 1) * RATE_INCREASE_PER_LEVEL;
 }
@@ -640,15 +637,14 @@ function closeModal() {
   if (modalEl) modalEl.classList.remove("active");
 }
 
-/* NHIỆM VỤ ĐIỂM DANH HẮNG NGÀY */
-function claimDailyReward() {
+async function claimDailyReward() {
   const now = Date.now();
   if (lastCheckinTime > 0 && now - lastCheckinTime < DAILY_COOLDOWN) return;
 
   lastCheckinTime = now;
   balance += 100.0;
 
-  saveState();
+  await saveState();
   updateUI();
   updateTaskUI();
 
@@ -683,7 +679,6 @@ function updateDailyCheckInUI() {
   }
 }
 
-// CẬP NHẬT GIAO DIỆN VÀ ĐẾM NGƯỢC THỜI GIAN CHỜ QUẢNG CÁO (15 PHÚT)
 function updateAdsTaskUI() {
   const watchAdBtn = document.getElementById("btn-watch-ad");
   if (!watchAdBtn) return;
@@ -704,16 +699,15 @@ function updateAdsTaskUI() {
   }
 }
 
-// XEM QUẢNG CÁO TÍCH HỢP MONETAG TRONG TAB TASKS (CÓ CHỜ 15P)
 function watchAdForReward() {
   const now = Date.now();
   if (adsNextTime > 0 && now < adsNextTime) return;
 
-  const grantAdReward = () => {
+  const grantAdReward = async () => {
     const reward = 150.0;
     balance += reward;
-    adsNextTime = Date.now() + ADS_COOLDOWN; // Thiết lập thời gian chờ 15 phút tiếp theo
-    saveState();
+    adsNextTime = Date.now() + ADS_COOLDOWN;
+    await saveState();
     updateUI();
     updateTaskUI();
 
@@ -739,7 +733,7 @@ function watchAdForReward() {
   }
 }
 
-function processTask(taskId, url) {
+async function processTask(taskId, url) {
   const btn = document.getElementById(`btn-task-${taskId}`);
   if (!btn) return;
 
@@ -761,7 +755,7 @@ function processTask(taskId, url) {
     balance += reward;
     taskState[taskId] = "claimed";
 
-    saveState();
+    await saveState();
     updateUI();
     updateTaskUI();
 
@@ -798,12 +792,11 @@ function updateTaskUI() {
   });
 }
 
-/* ĐIỀU KHIỂN MINING */
-function upgradeMiner() {
+async function upgradeMiner() {
   if (balance >= UPGRADE_COST) {
     balance -= UPGRADE_COST;
     minerLevel += 1;
-    saveState();
+    await saveState();
     updateUI();
     showModal(
       "⚡",
@@ -816,7 +809,6 @@ function upgradeMiner() {
   }
 }
 
-// Xử lý action bắt đầu/thu hoạch kết hợp quảng cáo Monetag
 function handleAction() {
   const now = Date.now();
 
@@ -849,9 +841,9 @@ function handleAction() {
   }
 }
 
-function startMining() {
+async function startMining() {
   endTime = Date.now() + MINING_DURATION;
-  saveState();
+  await saveState();
   updateUI();
   showModal(
     "🚀",
@@ -861,11 +853,11 @@ function startMining() {
   if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 }
 
-function claimReward() {
+async function claimReward() {
   const reward = getCycleReward();
   balance += reward;
   endTime = null;
-  saveState();
+  await saveState();
   updateUI();
   showModal(
     "🎁",
@@ -942,7 +934,6 @@ function renderTimer() {
   }
 }
 
-/* ĐỔI NGÔN NGỮ & ĐIỀU HƯỚNG TAB */
 function toggleLanguage() {
   currentLang = currentLang === "vi" ? "en" : "vi";
   applyLanguage();
@@ -989,8 +980,7 @@ function switchTab(tabName, clickedBtn) {
   if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
 }
 
-/* QUẢN LÝ VÍ TON & RÚT TIỀN */
-function saveWalletAddress() {
+async function saveWalletAddress() {
   const addressInput = document.getElementById("withdraw-address");
   if (!addressInput) return;
   const address = addressInput.value.trim();
@@ -1007,15 +997,15 @@ function saveWalletAddress() {
 
   savedTonAddress = address;
   updateWalletUIState();
-  saveState();
+  await saveState();
 
   if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
 }
 
-function editWalletAddress() {
+async function editWalletAddress() {
   savedTonAddress = "";
   updateWalletUIState();
-  saveState();
+  await saveState();
   if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
 }
 
@@ -1224,7 +1214,6 @@ function renderWithdrawHistory() {
     .join("");
 }
 
-// KHỞI CHẠY ỨNG DỤNG VÀ TẢI TỪ SUPABASE
 document.addEventListener("DOMContentLoaded", async () => {
   updateLoadingProgress("Đang khởi tạo Telegram...", 20);
   initUserTelegram();
@@ -1253,8 +1242,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   setTimeout(() => {
     hideLoadingScreen();
-
-    // --- KÍCH HOẠT QUẢNG CÁO TỰ ĐỘNG (INTERSTITIAL / IN-APP) MONETAG ---
     try {
       if (typeof show_11651812 === "function") {
         show_11651812().catch((err) => {

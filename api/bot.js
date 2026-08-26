@@ -100,11 +100,3 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: "Error handling update" });
   }
 };
-```[cite: 10]
-
----
-
-### Các việc bạn cần làm tiếp theo:
-1. **Thay thế nội dung file `api/bot.js`** bằng đoạn code phía trên và lưu lại[cite: 10].
-2. **Đảm bảo đã tạo bảng `referrals` trên Supabase** (như hướng dẫn ở bước trước) để cơ sở dữ liệu có nơi lưu trữ thông tin bạn bè[cite: 10].
-3. **Deploy (Đẩy code) lên Git/Vercel** để cập nhật thay đổi lên server trực tuyến. Sau đó bạn có thể thử test lại tính năng mời bạn bè[cite: 10].

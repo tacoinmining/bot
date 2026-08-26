@@ -179,6 +179,7 @@ const BASE_HOURLY_RATE = 40.0;
 const RATE_INCREASE_PER_LEVEL = 1.0;
 const TON_RATE = 0.000001;
 const DAILY_COOLDOWN = 24 * 60 * 60 * 1000;
+const ADS_COOLDOWN = 15 * 60 * 1000; // 15 Phút chờ giữa các lần xem quảng cáo
 
 // BIẾN TRẠNG THÁI GAME
 let balance = 0.0;
@@ -191,6 +192,7 @@ let userIpAddress = "";
 let savedTonAddress = "";
 
 let timerInterval = null;
+let adsTimerInterval = null;
 
 let taskState = {
   daily: false,
@@ -198,6 +200,7 @@ let taskState = {
   group: "init",
 };
 let lastCheckinTime = 0;
+let adsNextTime = 0; // Thời điểm có thể xem quảng cáo tiếp theo
 let withdrawHistory = [];
 let usedPromoCodes = [];
 
@@ -313,6 +316,7 @@ async function loadStateFromSupabase() {
         miner_level: 1,
         end_time: 0,
         last_checkin: 0,
+        ads_next_time: 0,
         task_channel: "init",
         task_group: "init",
         ip_address: userIpAddress,
@@ -327,6 +331,7 @@ async function loadStateFromSupabase() {
       minerLevel = 1;
       endTime = null;
       lastCheckinTime = 0;
+      adsNextTime = 0;
       taskState.channel = "init";
       taskState.group = "init";
       savedTonAddress = "";
@@ -339,6 +344,7 @@ async function loadStateFromSupabase() {
       minerLevel = parseInt(data.miner_level) || 1;
       endTime = data.end_time ? parseInt(data.end_time) : null;
       lastCheckinTime = data.last_checkin ? parseInt(data.last_checkin) : 0;
+      adsNextTime = data.ads_next_time ? parseInt(data.ads_next_time) : 0;
       taskState.channel = data.task_channel || "init";
       taskState.group = data.task_group || "init";
       savedTonAddress = data.ton_address || "";
@@ -368,6 +374,7 @@ async function saveState() {
         end_time: endTime ? endTime : 0,
         username: currentUsername,
         last_checkin: lastCheckinTime,
+        ads_next_time: adsNextTime,
         task_channel: taskState.channel,
         task_group: taskState.group,
         ip_address: userIpAddress,
@@ -598,41 +605,60 @@ function updateDailyCheckInUI() {
   }
 }
 
-// XEM QUẢNG CÁO TÍCH HỢP MONETAG TRONG TAB TASKS
-function watchAdForReward() {
-  if (typeof show_11651812 === "function") {
-    show_11651812()
-      .then(() => {
-        const reward = 150.0;
-        balance += reward;
-        saveState();
-        updateUI();
-        showModal(
-          "🎁",
-          translations[currentLang].modal_task_title,
-          `${translations[currentLang].modal_task_desc} +${reward} ⚡!`,
-        );
-        if (tg?.HapticFeedback)
-          tg.HapticFeedback.notificationOccurred("success");
-      })
-      .catch((err) => {
-        console.log("Quảng cáo bị lỗi hoặc bị tắt:", err);
-        showModal(
-          "⚠️",
-          "Thông Báo",
-          "Không thể hiển thị quảng cáo lúc này. Vui lòng thử lại sau!",
-        );
-      });
+// CẬP NHẬT GIAO DIỆN VÀ ĐẾM NGƯỢC THỜI GIAN CHỜ QUẢNG CÁO (15 PHÚT)
+function updateAdsTaskUI() {
+  const watchAdBtn = document.getElementById("btn-watch-ad");
+  if (!watchAdBtn) return;
+
+  const now = Date.now();
+  if (adsNextTime > 0 && now < adsNextTime) {
+    const remaining = adsNextTime - now;
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+    watchAdBtn.className = "task-btn done-btn disabled";
+    watchAdBtn.innerText = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    watchAdBtn.onclick = null;
   } else {
+    watchAdBtn.className = "task-btn claim-btn";
+    watchAdBtn.innerText = translations[currentLang].btn_watch;
+    watchAdBtn.onclick = watchAdForReward;
+  }
+}
+
+// XEM QUẢNG CÁO TÍCH HỢP MONETAG TRONG TAB TASKS (CÓ CHỜ 15P)
+function watchAdForReward() {
+  const now = Date.now();
+  if (adsNextTime > 0 && now < adsNextTime) return;
+
+  const grantAdReward = () => {
     const reward = 150.0;
     balance += reward;
+    adsNextTime = Date.now() + ADS_COOLDOWN; // Thiết lập thời gian chờ 15 phút tiếp theo
     saveState();
     updateUI();
+    updateTaskUI();
+
     showModal(
       "🎁",
       translations[currentLang].modal_task_title,
       `${translations[currentLang].modal_task_desc} +${reward} ⚡!`,
     );
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+  };
+
+  if (typeof show_11651812 === "function") {
+    show_11651812()
+      .then(() => {
+        grantAdReward();
+      })
+      .catch((err) => {
+        console.log("Quảng cáo bị lỗi hoặc bị tắt:", err);
+        // Vẫn cho nhận thưởng hoặc thông báo tùy ý, ở đây cho nhận để tránh kẹt trải nghiệm
+        grantAdReward();
+      });
+  } else {
+    grantAdReward();
   }
 }
 
@@ -673,6 +699,13 @@ function processTask(taskId, url) {
 
 function updateTaskUI() {
   updateDailyCheckInUI();
+  updateAdsTaskUI();
+
+  if (adsTimerInterval) clearInterval(adsTimerInterval);
+  adsTimerInterval = setInterval(() => {
+    updateDailyCheckInUI();
+    updateAdsTaskUI();
+  }, 1000);
 
   ["channel", "group"].forEach((taskId) => {
     const btn = document.getElementById(`btn-task-${taskId}`);
@@ -1113,7 +1146,7 @@ function renderWithdrawHistory() {
     .join("");
 }
 
-// KHỞI CHẠY ỨNG DỤNG VÀ TẢI TỪ SUPABASE (TÍCH HỢP GỌI QUẢNG CÁO TỰ ĐỘNG CHUẨN XÁC)
+// KHỞI CHẠY ỨNG DỤNG VÀ TẢI TỪ SUPABASE
 document.addEventListener("DOMContentLoaded", async () => {
   updateLoadingProgress("Đang khởi tạo Telegram...", 20);
   initUserTelegram();

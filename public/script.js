@@ -381,8 +381,11 @@ async function loadStateFromSupabase() {
       .single();
 
     if (error || !data) {
+      console.log(
+        "Không tìm thấy user, đang tiến hành tạo mới trên Supabase...",
+      );
       const newUser = {
-        telegram_id: userId,
+        telegram_id: String(userId),
         username: currentUsername,
         balance: 0.0,
         miner_level: 1,
@@ -399,7 +402,14 @@ async function loadStateFromSupabase() {
         ton_address: "",
       };
 
-      await supabaseClient.from("users").insert([newUser]);
+      const insertRes = await supabaseClient.from("users").insert([newUser]);
+
+      if (insertRes.error) {
+        console.error(
+          "LỖI KHI INSERT USER MỚI (Có thể do chính sách RLS của Supabase):",
+          insertRes.error,
+        );
+      }
 
       balance = 0.0;
       minerLevel = 1;
@@ -437,7 +447,7 @@ async function loadStateFromSupabase() {
       return false;
     }
   } catch (err) {
-    console.error("Lỗi kết nối Supabase:", err);
+    console.error("Lỗi ngoại lệ kết nối Supabase:", err);
     return false;
   }
 }
@@ -468,29 +478,41 @@ async function saveState() {
 }
 
 function initUserTelegram() {
-  if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-    const user = tg.initDataUnsafe.user;
-    userId = String(user.id);
-    currentUsername = user.username
-      ? `@${user.username}`
-      : user.first_name || "User";
+  if (window.Telegram && window.Telegram.WebApp) {
+    const tgInstance = window.Telegram.WebApp;
+    tgInstance.expand();
 
-    const fullName = [user.first_name, user.last_name]
-      .filter(Boolean)
-      .join(" ");
-
-    const userFullnameEl = document.getElementById("user-fullname");
-    if (userFullnameEl) userFullnameEl.innerText = fullName || "Telegram User";
-
-    const usernameElem = document.getElementById("username");
-    if (usernameElem) {
-      usernameElem.innerText = user.username
+    if (tgInstance.initDataUnsafe && tgInstance.initDataUnsafe.user) {
+      const user = tgInstance.initDataUnsafe.user;
+      userId = String(user.id);
+      currentUsername = user.username
         ? `@${user.username}`
-        : "#no_username";
+        : user.first_name || "User";
+
+      const fullName = [user.first_name, user.last_name]
+        .filter(Boolean)
+        .join(" ");
+
+      const userFullnameEl = document.getElementById("user-fullname");
+      if (userFullnameEl)
+        userFullnameEl.innerText = fullName || "Telegram User";
+
+      const usernameElem = document.getElementById("username");
+      if (usernameElem) {
+        usernameElem.innerText = user.username
+          ? `@${user.username}`
+          : "#no_username";
+      }
+      return;
     }
-  } else {
-    userId = "12345678";
   }
+
+  // Trường hợp mở ngoài Telegram hoặc không lấy được thông tin
+  console.warn(
+    "Không tìm thấy thông tin Telegram WebApp. Đang dùng ID giả lập.",
+  );
+  userId = "12345678";
+  currentUsername = "TestUser";
 }
 
 async function claimPromoCode() {

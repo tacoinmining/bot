@@ -202,6 +202,7 @@ let taskState = {
 let lastCheckinTime = 0;
 let adsNextTime = 0; // Thời điểm có thể xem quảng cáo tiếp theo
 let withdrawHistory = [];
+let friendsList = []; // Danh sách bạn bè được mời
 let usedPromoCodes = [];
 
 // CẬP NHẬT TRẠNG THÁI THANH LOADING
@@ -253,6 +254,23 @@ function initSupabaseRealtime() {
       },
     )
     .subscribe();
+
+  // Lắng nghe realtime danh sách bạn bè mới tham gia
+  supabaseClient
+    .channel("public:referrals")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "referrals",
+        filter: `referrer_id=eq.${userId}`,
+      },
+      (payload) => {
+        loadFriendsList();
+      },
+    )
+    .subscribe();
 }
 
 // --- LẤY ĐỊA CHỈ IP ---
@@ -297,6 +315,66 @@ async function loadWithdrawHistory() {
   } catch (err) {
     console.error("Lỗi ngoại lệ tải lịch sử:", err);
   }
+}
+
+// --- TẢI DANH SÁCH BẠN BÈ ---
+async function loadFriendsList() {
+  try {
+    let { data, error } = await supabaseClient
+      .from("referrals")
+      .select("*")
+      .eq("referrer_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("LỖI TẢI DANH SÁCH BẠN BÈ:", error);
+      return;
+    }
+
+    if (data) {
+      friendsList = data.map((item) => ({
+        username: item.invited_username || "User",
+        reward: item.reward || 200,
+        createdAt: new Date(item.created_at).toLocaleDateString(),
+      }));
+      renderFriendsList();
+    }
+  } catch (err) {
+    console.error("Lỗi ngoại lệ tải danh sách bạn bè:", err);
+  }
+}
+
+function renderFriendsList() {
+  const container = document.getElementById("friends-list-container");
+  const countBadge = document.getElementById("friends-count-badge");
+
+  if (countBadge) {
+    countBadge.innerText = `${friendsList.length} ${translations[currentLang].unit_friends}`;
+  }
+
+  if (!container) return;
+
+  if (friendsList.length === 0) {
+    container.innerHTML = `<div class="empty-frends">${translations[currentLang].empty_frends}</div>`;
+    return;
+  }
+
+  container.innerHTML = friendsList
+    .map(
+      (friend) => `
+    <div class="friend-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="font-size: 20px;">👤</div>
+        <div>
+          <div style="font-weight: 600; color: #fff;">${friend.username}</div>
+          <div style="font-size: 12px; color: #94a3b8;">${friend.createdAt}</div>
+        </div>
+      </div>
+      <div style="color: #4ade80; font-weight: bold;">+${friend.reward} ⚡</div>
+    </div>
+  `,
+    )
+    .join("");
 }
 
 // --- ĐỒNG BỘ DỮ LIỆU VỚI SUPABASE ---
@@ -654,7 +732,6 @@ function watchAdForReward() {
       })
       .catch((err) => {
         console.log("Quảng cáo bị lỗi hoặc bị tắt:", err);
-        // Vẫn cho nhận thưởng hoặc thông báo tùy ý, ở đây cho nhận để tránh kẹt trải nghiệm
         grantAdReward();
       });
   } else {
@@ -872,6 +949,7 @@ function toggleLanguage() {
   updateUI();
   updateTaskUI();
   renderWithdrawHistory();
+  renderFriendsList();
   if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
 }
 
@@ -1163,6 +1241,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   await loadWithdrawHistory();
+  await loadFriendsList();
 
   updateLoadingProgress("Hoàn tất!", 100);
   applyLanguage();

@@ -1,10 +1,69 @@
 const { Telegraf } = require("telegraf");
+const { createClient } = require("@supabase/supabase-js");
+
+// Cấu hình kết nối Supabase
+const SUPABASE_URL = "https://miasmllplfprvtjxfsgs.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pYXNtbGxwbGZwcnZ0anhmc2dzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTkwODksImV4cCI6MjEwMzEzNTA4OX0.IUuZ7PckUs_eYibFyrZ0kbOvjUmvlpjGZRpyej5-mq8";
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Lấy Token bot từ biến môi trường trên Vercel
 const bot = new Telegraf("8931580328:AAH1yBF1GUyVJgTxXng6z-Pm1OKSkRd1fvs");
 
-// Xử lý lệnh /start
-bot.start((ctx) => {
+// Xử lý lệnh /start (Hỗ trợ bắt link giới thiệu ref_)
+bot.start(async (ctx) => {
+  const payload = ctx.payload; // Lấy đoạn text đằng sau /start (ví dụ: ref_12345678)[cite: 10]
+  const newUserId = String(ctx.from.id);
+  const newUsername = ctx.from.username
+    ? `@${ctx.from.username}`
+    : ctx.from.first_name || "User";
+
+  // Kiểm tra nếu có mã giới thiệu ref_
+  if (payload && payload.startsWith("ref_")) {
+    const referrerId = payload.replace("ref_", "");
+
+    // Đảm bảo không tự mời chính mình
+    if (referrerId !== newUserId) {
+      try {
+        // 1. Kiểm tra xem người dùng mới này đã được ghi nhận giới thiệu trước đó chưa
+        const { data: existingRef } = await supabaseClient
+          .from("referrals")
+          .select("*")
+          .eq("invited_id", newUserId)
+          .single();
+
+        if (!existingRef) {
+          // 2. Thêm dòng mới vào bảng referrals trên Supabase
+          await supabaseClient.from("referrals").insert([
+            {
+              referrer_id: referrerId,
+              invited_id: newUserId,
+              invited_username: newUsername,
+              reward: 200,
+            },
+          ]);
+
+          // 3. Cộng +200 ⚡ vào số dư của người giới thiệu (referrerId)
+          const { data: refUser } = await supabaseClient
+            .from("users")
+            .select("balance")
+            .eq("telegram_id", referrerId)
+            .single();
+
+          if (refUser) {
+            const updatedBalance = (parseFloat(refUser.balance) || 0) + 200;
+            await supabaseClient
+              .from("users")
+              .update({ balance: updatedBalance })
+              .eq("telegram_id", referrerId);
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi xử lý giới thiệu (referral):", err);
+      }
+    }
+  }
+
   const welcomeMessage =
     `🚀*Welcome to TA COINS MINING – Your Ultimate Mining Empire!*\n\n` +
     `Step into the future of digital asset generation with TA COINS MINING, the most engaging and rewarding tap-to-earn Mini App right inside Telegram!\n\n` +
@@ -41,3 +100,11 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: "Error handling update" });
   }
 };
+```[cite: 10]
+
+---
+
+### Các việc bạn cần làm tiếp theo:
+1. **Thay thế nội dung file `api/bot.js`** bằng đoạn code phía trên và lưu lại[cite: 10].
+2. **Đảm bảo đã tạo bảng `referrals` trên Supabase** (như hướng dẫn ở bước trước) để cơ sở dữ liệu có nơi lưu trữ thông tin bạn bè[cite: 10].
+3. **Deploy (Đẩy code) lên Git/Vercel** để cập nhật thay đổi lên server trực tuyến. Sau đó bạn có thể thử test lại tính năng mời bạn bè[cite: 10].

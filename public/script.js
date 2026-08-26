@@ -286,7 +286,7 @@ async function loadWithdrawHistory() {
     let { data, error } = await supabaseClient
       .from("withdrawals")
       .select("*")
-      .eq("telegram_id", userId)
+      .eq("telegram_id", String(userId))
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -377,10 +377,14 @@ async function loadStateFromSupabase() {
     let { data, error } = await supabaseClient
       .from("users")
       .select("*")
-      .eq("telegram_id", userId)
-      .single();
+      .eq("telegram_id", String(userId))
+      .maybeSingle();
 
-    if (error || !data) {
+    if (error) {
+      console.error("Lỗi truy vấn Supabase:", error);
+    }
+
+    if (!data) {
       console.log(
         "Không tìm thấy user, đang tiến hành tạo mới trên Supabase...",
       );
@@ -442,7 +446,7 @@ async function loadStateFromSupabase() {
         await supabaseClient
           .from("users")
           .update({ ip_address: userIpAddress })
-          .eq("telegram_id", userId);
+          .eq("telegram_id", String(userId));
       }
       return false;
     }
@@ -471,7 +475,7 @@ async function saveState() {
         ton_address: savedTonAddress ? String(savedTonAddress) : "",
         used_promo_codes: usedPromoCodes,
       })
-      .eq("telegram_id", userId);
+      .eq("telegram_id", String(userId));
   } catch (err) {
     console.error("Lỗi ngoại lệ khi lưu trạng thái:", err);
   }
@@ -507,7 +511,6 @@ function initUserTelegram() {
     }
   }
 
-  // Trường hợp mở ngoài Telegram hoặc không lấy được thông tin
   console.warn(
     "Không tìm thấy thông tin Telegram WebApp. Đang dùng ID giả lập.",
   );
@@ -539,7 +542,7 @@ async function claimPromoCode() {
       .from("promo_codes")
       .select("*")
       .eq("code", code)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       showModal(
@@ -1175,7 +1178,7 @@ async function submitWithdrawRequest() {
   const tonAmountCalc = parseFloat((amount * TON_RATE).toFixed(4));
 
   const newTx = {
-    telegram_id: userId,
+    telegram_id: String(userId),
     amount: amount,
     ton_amount: tonAmountCalc,
     address: address,

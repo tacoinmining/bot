@@ -39,6 +39,9 @@ const translations = {
     wallet_empty_history: "Chưa có lịch sử rút tiền nào.",
 
     daily_title: "Điểm Danh Hằng Ngày",
+    ads_tasks_title: "Xem Quảng Cáo Nhận Thưởng",
+    ad_task_name: "Xem video quảng cáo",
+    btn_watch: "Xem ngay",
     social_tasks_title: "Nhiệm Vụ Telegram",
     task_channel_name: "Kênh Telegram chính thức",
     task_group_name: "Nhóm Chat Telegram",
@@ -113,6 +116,9 @@ const translations = {
     wallet_empty_history: "No withdrawal history yet.",
 
     daily_title: "Daily Check-in",
+    ads_tasks_title: "Watch Ads for Rewards",
+    ad_task_name: "Watch video advertisement",
+    btn_watch: "Watch",
     social_tasks_title: "Telegram Tasks",
     task_channel_name: "Official Telegram Channel",
     task_group_name: "Telegram Chat Group",
@@ -620,6 +626,45 @@ function updateDailyCheckInUI() {
     dailyBtn.className = "task-btn claim-btn";
     dailyBtn.innerText = translations[currentLang].btn_checkin;
     dailyBtn.onclick = claimDailyReward;
+  }
+}
+
+// XEM QUẢNG CÁO TÍCH HỢP MONETAG TRONG TAB TASKS
+function watchAdForReward() {
+  if (typeof show_11651812 === "function") {
+    show_11651812()
+      .then(() => {
+        const reward = 150.0;
+        balance += reward;
+        saveState();
+        updateUI();
+        showModal(
+          "🎁",
+          translations[currentLang].modal_task_title,
+          `${translations[currentLang].modal_task_desc} +${reward} ⚡!`,
+        );
+        if (tg?.HapticFeedback)
+          tg.HapticFeedback.notificationOccurred("success");
+      })
+      .catch((err) => {
+        console.log("Quảng cáo bị lỗi hoặc bị tắt:", err);
+        showModal(
+          "⚠️",
+          "Thông Báo",
+          "Không thể hiển thị quảng cáo lúc này. Vui lòng thử lại sau!",
+        );
+      });
+  } else {
+    // Trường hợp chạy môi trường test không có SDK
+    const reward = 150.0;
+    balance += reward;
+    saveState();
+    updateUI();
+    showModal(
+      "🎁",
+      translations[currentLang].modal_task_title,
+      `${translations[currentLang].modal_task_desc} +${reward} ⚡!`,
+    );
   }
 }
 

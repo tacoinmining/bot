@@ -323,7 +323,7 @@ async function loadFriendsList() {
     let { data, error } = await supabaseClient
       .from("referrals")
       .select("*")
-      .eq("referrer_id", userId)
+      .eq("referrer_id", String(userId)) // Ép kiểu string để luôn khớp với Supabase
       .order("created_at", { ascending: false });
 
     if (error) {
